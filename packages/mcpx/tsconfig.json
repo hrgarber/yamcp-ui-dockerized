@@ -1,0 +1,10 @@
+{
+  "extends": "../typescript/tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "types": ["node"],
+    "jsx": "react"
+  },
+  "include": ["src/**/*"]
+}

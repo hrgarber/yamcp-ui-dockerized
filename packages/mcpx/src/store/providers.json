@@ -1,0 +1,47 @@
+{
+  "weather1": {
+    "command": "/Users/hra/.local/bin/uv",
+    "args": [
+      "--directory",
+      "/Users/hra/Workspace/Code/agent-playground/MCP/server/weather",
+      "run",
+      "weather.py"
+    ]
+  },
+  "weather2": {
+    "command": "/Users/hra/.local/bin/uv",
+    "args": [
+      "--directory",
+      "/Users/hra/Workspace/Code/agent-playground/MCP/server/weather",
+      "run",
+      "weather.py"
+    ]
+  },
+  "weather3": {
+    "command": "/Users/hra/.local/bin/uv",
+    "args": [
+      "--directory",
+      "/Users/hra/Workspace/Code/agent-playground/MCP/server/weather",
+      "run",
+      "weather.py"
+    ]
+  },
+  "weather4": {
+    "command": "/Users/hra/.local/bin/uv",
+    "args": [
+      "--directory",
+      "/Users/hra/Workspace/Code/agent-playground/MCP/server/weather",
+      "run",
+      "weather.py"
+    ]
+  },
+  "weather5": {
+    "command": "/Users/hra/.local/bin/uv",
+    "args": [
+      "--directory",
+      "/Users/hra/Workspace/Code/agent-playground/MCP/server/weather",
+      "run",
+      "weather.py"
+    ]
+  }
+}
