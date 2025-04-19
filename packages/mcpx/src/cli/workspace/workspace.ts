@@ -8,7 +8,7 @@ import { editWorkspaces } from "./commands/edit";
 
 export function workspaceCommands(program: Command) {
   const workspace = program
-    .command("workspace")
+    .command("ws")
     .description("Manage MCP workspaces");
 
   workspace
