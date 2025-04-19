@@ -1,4 +1,4 @@
-# MCPX - MCP Gateway Manager
+# MCPX - A Model Context Workspace Manager
 
 MCPX is a command-line tool for organizing and managing MCP Servers as local workspaces. It enables seamless connection to multiple MCP servers (both local and remote) and bundles them into workspaces for use in AI Apps. All server communications are tracked in a consolidated log store for easy monitoring and debugging.
 
