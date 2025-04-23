@@ -1,4 +1,5 @@
 import path from "path";
+
 // Server
 export const SERVER_NAME = "tesser_mcp_gateway";
 export const SERVER_VERSION = "1.0.0";
@@ -14,5 +15,4 @@ export const WORKSPACES_CONFIG_PATH = path.join(
   `./${storeDir}/workspaces.json`
 );
 
-// Logs
 export const LOG_DIR = path.join(__dirname, `./.logs`);

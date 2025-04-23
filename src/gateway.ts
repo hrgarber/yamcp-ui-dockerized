@@ -11,16 +11,18 @@ import {
 import type { McpProvider } from "./store/schema";
 import { GatewayServer } from "./gatewayServer.js";
 import { GatewayRouter } from "./gatewayRouter.js";
-import { logger } from "./utility/logger.js";
+import { Logger } from "./utility/logger.js";
 
 class McpGateway {
   private server: GatewayServer;
   private router: GatewayRouter;
   private isStarted = false;
+  private _logger?: Logger;
 
-  constructor(router: GatewayRouter, server: GatewayServer) {
+  constructor(router: GatewayRouter, server: GatewayServer, logger?: Logger) {
     this.server = server;
     this.router = router;
+    this._logger = logger;
   }
 
   private _toolHandlersInitialized = false;
@@ -53,7 +55,7 @@ class McpGateway {
     mcpServer.setRequestHandler(
       ListToolsRequestSchema,
       async (request): Promise<ListToolsResult> => {
-        logger.logMessage({
+        this._logger?.logMessage({
           level: "info",
           data: request,
         });
@@ -68,7 +70,7 @@ class McpGateway {
     mcpServer.setRequestHandler(
       CallToolRequestSchema,
       async (request): Promise<CallToolResult> => {
-        logger.logMessage({
+        this._logger?.logMessage({
           level: "info",
           data: request,
         });
@@ -104,7 +106,7 @@ class McpGateway {
     mcpServer.setRequestHandler(
       ListPromptsRequestSchema,
       async (request): Promise<ListPromptsResult> => {
-        logger.logMessage({
+        this._logger?.logMessage({
           level: "info",
           data: request,
         });
@@ -118,7 +120,7 @@ class McpGateway {
     mcpServer.setRequestHandler(
       GetPromptRequestSchema,
       async (request): Promise<GetPromptResult> => {
-        logger.logMessage({
+        this._logger?.logMessage({
           level: "info",
           data: request,
         });
@@ -137,7 +139,7 @@ class McpGateway {
     // first set the handlers. This should be done before starting the server and router
     this.setToolRequestHandler();
     this.setPromptRequestHandler();
-    logger.logMessage({
+    this._logger?.logMessage({
       level: "info",
       data: "MCP Gateway started...",
     });
@@ -146,7 +148,7 @@ class McpGateway {
     await this.router.start(providersConfig);
     await this.server.start();
 
-    logger.logMessage({
+    this._logger?.logMessage({
       level: "info",
       data: "Listening for client connections on stdio",
     });
@@ -159,10 +161,11 @@ class McpGateway {
       return;
     }
     // send a logging message to the client
-    logger.logMessage({
+    this._logger?.logMessage({
       level: "info",
       data: "Shutting down gateway...",
     });
+
     // stop the gateway server and router
     await Promise.all([this.router.stop(), this.server.stop()]);
     this.isStarted = false;

@@ -20,9 +20,15 @@ import {
 } from "./utility/namespace";
 
 import type { McpProvider } from "./store/schema";
+import { Logger } from "./utility/logger.js";
 
 class GatewayRouter {
   providers?: Map<Namespace, McpClient>;
+  private _logger?: Logger;
+
+  constructor(logger?: Logger) {
+    this._logger = logger;
+  }
 
   // Connect to MCP providers
   async connect(providersConfig: McpProvider[]) {
@@ -32,17 +38,35 @@ class GatewayRouter {
     for (const providerConfig of providersConfig) {
       const transport = getProviderClientTransport(providerConfig);
       const { namespace } = providerConfig;
-      const providerPromise = connectProviderClient(transport).then(
-        (provider) => ({
+      const providerPromise = connectProviderClient(transport)
+        .then((provider) => ({
           namespace,
           provider,
-        })
-      );
+          error: undefined,
+        }))
+        .catch((err) => ({
+          namespace,
+          provider: undefined,
+          error: err,
+        }));
       providerPromises.push(providerPromise);
     }
     const providers = await Promise.all(providerPromises);
-    for (const { namespace, provider } of providers) {
-      this.providers.set(namespace, provider);
+    // filter out providers that failed to connect
+    const connectedProviders = providers.filter((provider) => {
+      if (provider.error) {
+        this._logger?.error(
+          `Failed to connect to provider ${provider.namespace}`,
+          provider.error
+        );
+        return false;
+      } else {
+        return true;
+      }
+    });
+
+    for (const { namespace, provider } of connectedProviders) {
+      provider && this.providers.set(namespace, provider);
     }
   }
 

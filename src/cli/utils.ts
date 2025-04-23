@@ -1,6 +1,5 @@
 import type { TreeNode } from "./types";
-
-import { logger } from "../utility/logger";
+import type { Logger } from "../utility/logger";
 import { Namespace } from "../utility/namespace";
 import chalk from "chalk";
 import { McpProvider, isStdioConfig, isSSEConfig } from "../store/schema";
@@ -56,7 +55,6 @@ export function parseProviderParameters(
       },
     };
   }
-
   throw new Error("Either command or url must be provided");
 }
 
@@ -94,12 +92,17 @@ export function buildProviderTree(provider: McpProvider): TreeNode {
 
 export function getWorkspaceProviders(
   providers: Record<string, McpProvider>,
-  workspace: Namespace[]
+  workspace: Namespace[],
+  logger?: Logger
 ) {
   const workspaceProviders = workspace.map((wsProvider) => {
     const provider = providers[wsProvider];
     if (!provider) {
-      logger.error(`Provider ${wsProvider} not found`);
+      if (logger) {
+        logger.error(`Provider ${wsProvider} not found`);
+      } else {
+        console.error(chalk.red(`✘Provider ${wsProvider} not found`));
+      }
     }
     return provider;
   });

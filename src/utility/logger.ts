@@ -19,29 +19,31 @@ interface LogMessage {
   [key: string]: unknown; // Add index signature for additional properties
 }
 
-const _logger = winston.createLogger({
-  level: "info",
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json()
-  ),
-  transports: [
-    // Write all logs with importance level of 'error' or less to 'error.log'
-    new winston.transports.File({
-      filename: path.join(LOG_DIR, "error.log"),
-      level: "error",
-    }),
-    // Write all logs with importance level of 'info' or less to 'combined.log'
-    new winston.transports.File({
-      filename: path.join(LOG_DIR, "combined.log"),
-    }),
-  ],
-});
+const createLogger = (namespace: string) => {
+  // Create logs directory if it doesn't exist
+  if (!fs.existsSync(path.join(LOG_DIR, namespace))) {
+    fs.mkdirSync(path.join(LOG_DIR, namespace), { recursive: true });
+  }
 
-// Create logs directory if it doesn't exist
-if (!fs.existsSync(LOG_DIR)) {
-  fs.mkdirSync(LOG_DIR, { recursive: true });
-}
+  return winston.createLogger({
+    level: "info",
+    format: winston.format.combine(
+      winston.format.timestamp(),
+      winston.format.json()
+    ),
+    transports: [
+      // Write all logs with importance level of 'error' or less to 'error.log'
+      new winston.transports.File({
+        filename: path.join(LOG_DIR, namespace, `error.log`),
+        level: "error",
+      }),
+      // Write all logs with importance level of 'info' or less to 'combined.log'
+      new winston.transports.File({
+        filename: path.join(LOG_DIR, namespace, "combined.log"),
+      }),
+    ],
+  });
+};
 
 // Helper function to format errors
 const formatError = (
@@ -62,36 +64,58 @@ const formatError = (
   };
 };
 
-class Logger {
+export class Logger {
+  private ended = false;
+  private logger: winston.Logger;
+  constructor(namespace: string) {
+    this.logger = createLogger(namespace);
+  }
   info(message: string, metadata?: Record<string, unknown>) {
-    _logger.info(message, metadata);
+    if (this.ended) {
+      return;
+    }
+    this.logger.info(message, metadata);
   }
   error(error: unknown, additionalMetadata?: Record<string, unknown>) {
+    if (this.ended) {
+      return;
+    }
     const { errorMessage, metadata } = formatError(error);
-    _logger.error(errorMessage, {
+    this.logger.error(errorMessage, {
       ...metadata,
       ...additionalMetadata,
     });
   }
   logMessage(logMsg: LogMessage) {
+    if (this.ended) {
+      return;
+    }
     const level = logMsg.level;
     const message =
       typeof logMsg.data === "string"
         ? logMsg.data
         : JSON.stringify(logMsg.data);
-    _logger.log(level, message, logMsg._meta);
+    this.logger.log(level, message, logMsg._meta);
   }
   // Function to flush logs and exit
   async flushLogs() {
     return new Promise<void>(() => {
-      _logger.end(() => {
+      this.logger.end(() => {
+        this.ended = true;
         resolve();
+      }); // Signal Winston to finish writing logs
+    });
+  }
+
+  // Function to flush logs and exit
+  async flushLogsAndExit(code: number) {
+    return new Promise<void>(() => {
+      this.logger.end(() => {
+        this.ended = true;
+        process.exit(code);
       }); // Signal Winston to finish writing logs
     });
   }
 }
 
-const logger = new Logger();
-
-export { logger };
 export type { LogMessage };
