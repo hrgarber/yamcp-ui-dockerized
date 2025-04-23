@@ -140,3 +140,6 @@ dist
 
 #DS_Store
 .DS_Store
+
+# ignore .store folder
+.store/

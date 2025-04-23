@@ -18,4 +18,4 @@ workspaceCommands(program);
 // Add run command
 runCommand(program);
 
-program.parse(process.argv);
+program.parseAsync(process.argv);

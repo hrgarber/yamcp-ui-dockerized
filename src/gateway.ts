@@ -23,16 +23,6 @@ class McpGateway {
     this.router = router;
   }
 
-  private async sendLoggingMessage(log: {
-    level: "info" | "error";
-    data: string;
-  }) {
-    if (this.isStarted) {
-      this.server.mcpServer.sendLoggingMessage(log);
-    }
-    logger.logMessage(log);
-  }
-
   private _toolHandlersInitialized = false;
   private setToolRequestHandler() {
     const mcpServer = this.server.mcpServer;
@@ -147,8 +137,7 @@ class McpGateway {
     // first set the handlers. This should be done before starting the server and router
     this.setToolRequestHandler();
     this.setPromptRequestHandler();
-
-    this.sendLoggingMessage({
+    logger.logMessage({
       level: "info",
       data: "MCP Gateway started...",
     });
@@ -157,7 +146,7 @@ class McpGateway {
     await this.router.start(providersConfig);
     await this.server.start();
 
-    this.sendLoggingMessage({
+    logger.logMessage({
       level: "info",
       data: "Listening for client connections on stdio",
     });
@@ -170,7 +159,7 @@ class McpGateway {
       return;
     }
     // send a logging message to the client
-    this.sendLoggingMessage({
+    logger.logMessage({
       level: "info",
       data: "Shutting down gateway...",
     });

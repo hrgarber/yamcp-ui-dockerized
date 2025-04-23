@@ -23,7 +23,6 @@ async function connectProviderClient(
     version: SERVER_VERSION,
   });
   await client.connect(transport);
-
   return client;
 }
 

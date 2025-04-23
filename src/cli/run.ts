@@ -32,10 +32,12 @@ async function runGateway(workspaceName: string) {
       try {
         await gateway.stop();
         logger.info("Gateway stopped gracefully");
-        logger.flushLogsAndExit(0);
+        await logger.flushLogs();
+        process.exit(0);
       } catch (error) {
         logger.error("Error stopping gateway", { error });
-        logger.flushLogsAndExit(1);
+        await logger.flushLogs();
+        process.exit(1);
       }
     });
 
@@ -45,9 +47,8 @@ async function runGateway(workspaceName: string) {
       "Gateway started successfully with loaded provider configurations"
     );
   } catch (error) {
-    console.error(error);
     logger.error("Error starting gateway");
-    logger.flushLogsAndExit(1);
+    await logger.flushLogs();
   }
 }
 

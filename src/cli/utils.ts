@@ -97,3 +97,7 @@ export function getWorkspaceProviders(
   });
   return workspaceProviders;
 }
+
+export function returnAndExit(code: number) {
+  process.exit(code);
+}
