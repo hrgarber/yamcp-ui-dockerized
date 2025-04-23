@@ -4,6 +4,14 @@ import { logger } from "../utility/logger";
 import { Namespace } from "../utility/namespace";
 import chalk from "chalk";
 import { McpProvider, isStdioConfig, isSSEConfig } from "../store/schema";
+import {
+  scanProvider,
+  isScanSuccessful,
+  getScanFailures,
+  ScanResult,
+} from "../providerScanner";
+import prompts from "prompts";
+import treeify from "treeify";
 
 export function parseProviderParameters(
   name: string,
@@ -100,4 +108,74 @@ export function getWorkspaceProviders(
 
 export function returnAndExit(code: number) {
   process.exit(code);
+}
+
+export async function scanProviderAndConfirm(mcpProvider: McpProvider) {
+  const scanResult = await scanProvider(mcpProvider);
+  if (!isScanSuccessful(scanResult)) {
+    console.log(
+      chalk.red(`✘ Mcp server "${mcpProvider.namespace}" scan failed`)
+    );
+    console.log(chalk.red(getScanFailures(scanResult).join("\n")));
+    const continueAdding = await prompts({
+      type: "confirm",
+      name: "value",
+      message: "Scan failed, Do you still want to add provider?",
+      initial: false,
+    });
+
+    if (!continueAdding.value) {
+      return false;
+    }
+  }
+  console.log(
+    chalk.green(`✔ Server "${mcpProvider.namespace}" imported successfully`)
+  );
+  printScanResult(scanResult);
+  return true;
+}
+
+export function printScanResult(scanResult: ScanResult) {
+  type CapabilityTree = {
+    [key: string]: string | CapabilityTree;
+  };
+
+  const tools = scanResult.capabilities.data?.tools?.list;
+  const prompts = scanResult.capabilities.data?.prompts?.list;
+  const resources = scanResult.capabilities.data?.resources?.list;
+
+  const tree: CapabilityTree = {};
+
+  if (tools?.length && tools.length > 0) {
+    tree["Tools"] = {};
+    const toolsNode: CapabilityTree = {};
+    tools.forEach((tool) => {
+      toolsNode[tool.name] = {};
+    });
+    tree["Tools"] = toolsNode;
+  }
+
+  if (prompts?.length && prompts.length > 0) {
+    tree["Prompts"] = {};
+    const promptsNode: CapabilityTree = {};
+    prompts.forEach((prompt) => {
+      promptsNode[prompt.name] = {};
+    });
+    tree["Prompts"] = promptsNode;
+  }
+
+  if (resources?.length && resources.length > 0) {
+    tree["Resources"] = {};
+    const resourcesNode: CapabilityTree = {};
+    resources.forEach((resource) => {
+      resourcesNode[resource.name] = {};
+    });
+    tree["Resources"] = resourcesNode;
+  }
+
+  if (Object.keys(tree).length > 0) {
+    console.log(chalk.bold("Server Capabilities:"));
+    console.log(chalk.dim("---------------------"));
+    console.log(treeify.asTree(tree, true, true));
+  }
 }

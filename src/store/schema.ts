@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+const UrlSchema = z.string().url("Invalid URL format");
+
 // Define the Zod schema for provider parameters
 const StdioProviderParametersSchema = z.object({
   command: z.string(),
@@ -9,7 +11,7 @@ const StdioProviderParametersSchema = z.object({
 });
 
 const SSEProviderParametersSchema = z.object({
-  url: z.string().url("Invalid URL format"),
+  url: UrlSchema,
 });
 
 // Union type for provider parameters matching ProviderParameters type
@@ -59,6 +61,7 @@ export {
   McpProviderSchema,
   WorkspaceMapSchema,
   ProviderStoreSchema,
+  UrlSchema,
 };
 export type {
   McpProvider,

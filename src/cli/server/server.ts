@@ -9,35 +9,21 @@ import { loadProviderConfigFile } from "../../store/loader";
 import prompts from "prompts";
 import { addProvider } from "./commands/add";
 import { printProviders } from "./commands/list";
-import { parseProviderParameters } from "../utils";
+import { scanProvider } from "../../providerScanner";
+import { returnAndExit, scanProviderAndConfirm } from "../utils";
 export function serverCommands(program: Command) {
   const server = program.command("server").description("Manage MCP providers");
 
   server
     .command("add")
-    .description("Add a new MCP provider (local or remote)")
-    .argument("[name]", "name of the provider")
-    .option("--command <command>", "command to run the provider")
-    .option(
-      "--env [env...]",
-      "environment variables for the command (key=value pairs)"
-    )
-    .option("--url <url>", "URL for the provider")
-    .action((name, options) => {
-      if (name) {
-        // Non-interactive mode
-        const mcpProviderConfig = parseProviderParameters(name, options);
-        addMcpProviders([mcpProviderConfig]);
-        console.log(chalk.green(`✔ Provider "${name}" added successfully`));
-      } else {
-        // Interactive mode
-        addProvider();
-      }
+    .description("Add a new MCP server (local or remote)")
+    .action(async () => {
+      addProvider();
     });
 
   server
     .command("list")
-    .description("List all MCP providers")
+    .description("List all MCP servers")
     .action(() => {
       const providersMap = getMcpProviders();
       const providers = Object.values(providersMap);
@@ -46,20 +32,20 @@ export function serverCommands(program: Command) {
 
   server
     .command("remove")
-    .description("Remove a provider")
-    .argument("<name>", "name of the provider to remove")
+    .description("Remove a server")
+    .argument("<name>", "name of the server to remove")
     .action(async (name) => {
       const providers = getMcpProviders();
 
       if (!providers[name]) {
-        console.error(chalk.red(`Provider "${name}" not found`));
+        console.error(chalk.red(`Server "${name}" not found`));
         return;
       }
 
       const response = await prompts({
         type: "confirm",
         name: "value",
-        message: `Are you sure you want to remove provider "${name}"?`,
+        message: `Are you sure you want to remove server "${name}"?`,
         initial: false,
       });
 
@@ -69,14 +55,14 @@ export function serverCommands(program: Command) {
       }
 
       removeMcpProvider(name);
-      console.log(chalk.green(`✔ Provider "${name}" removed successfully`));
+      console.log(chalk.green(`✔ Server "${name}" removed successfully`));
     });
 
   server
     .command("import")
-    .description("Import provider configuration from a file")
+    .description("Import server configuration from a file")
     .argument("<config>", "path to the config file")
-    .action((config) => {
+    .action(async (config) => {
       const providers = loadProviderConfigFile(config);
       if (providers?.length === 0) {
         console.error(
@@ -85,10 +71,15 @@ export function serverCommands(program: Command) {
           )
         );
       }
+      for (const provider of providers) {
+        const confirmed = await scanProviderAndConfirm(provider);
+        if (!confirmed) {
+          returnAndExit(1);
+        }
+      }
       addMcpProviders(providers);
-      console.log(
-        chalk.green("✔ Provider configuration imported successfully")
-      );
+      console.log(chalk.green("✔ Server configuration imported successfully"));
+      returnAndExit(0);
     });
 
   return server;

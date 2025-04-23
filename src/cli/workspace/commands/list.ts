@@ -52,7 +52,7 @@ export async function listWorkspace(
           providerCount > showCount
             ? `+ ${providerCount - showCount} more`
             : "";
-        const description = `${providerCount} providers (${workspaces[ws]
+        const description = `${providerCount} servers (${workspaces[ws]
           .slice(0, showCount)
           .join(", ")} ${notDisplayedHint})`;
         return {
@@ -115,8 +115,8 @@ async function displayWorkspaceInteractive(
     // No matter what, we break out of the loop to return to the workspace list
     await prompts({
       type: "select",
-      name: "provider",
-      message: `See mcp provider details in workspace "${name}" (use arrow keys)`,
+      name: "server",
+      message: `See mcp server details in workspace "${name}" (use arrow keys)`,
       choices,
     });
 
@@ -141,7 +141,7 @@ function displayWorkspace(name: string, providers: string[] | undefined) {
   // ToDo: Show as tree
   console.log(
     chalk.bold(`Workspace: ${chalk.green(name)}\n\n`) +
-      chalk.bold(`Providers (${providers.length}):\n`) +
+      chalk.bold(`Servers (${providers.length}):\n`) +
       providers
         .map((provider) => `  ${chalk.green("•")} ${provider}`)
         .join("\n"),

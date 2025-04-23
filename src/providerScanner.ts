@@ -4,7 +4,7 @@ import {
   connectProviderClient,
 } from "./providerClient";
 
-interface ScanResult {
+export interface ScanResult {
   connection: {
     success: boolean;
     error?: string;
@@ -25,9 +25,15 @@ interface Capabilities {
   experimental?: Record<string, boolean>;
   logging?: Record<string, boolean>;
   completion?: Record<string, boolean>;
-  tools?: Record<string, boolean> & { list?: string[] };
-  prompts?: Record<string, boolean> & { list?: string[] };
-  resources?: Record<string, boolean> & { list?: string[] };
+  tools?: Record<string, boolean> & {
+    list?: { name: string; description: string | undefined }[];
+  };
+  prompts?: Record<string, boolean> & {
+    list?: { name: string; description: string | undefined }[];
+  };
+  resources?: Record<string, boolean> & {
+    list?: { name: string; description: string | undefined }[];
+  };
 }
 
 function createInitialScanResult(): ScanResult {
@@ -101,23 +107,31 @@ export async function scanProvider(provider: McpProvider): Promise<ScanResult> {
     // Step 4: Check capabilities
     try {
       const caps = await client.getServerCapabilities();
-
       result.capabilities.success = true;
       result.capabilities.data = transformCapabilities(caps);
       if (result.capabilities.data.prompts) {
         const prompts = await client.listPrompts();
         result.capabilities.data.prompts.list =
-          prompts.prompts?.map((prompt: any) => prompt.name) || [];
+          prompts.prompts?.map((prompt) => ({
+            name: prompt.name,
+            description: prompt.description || "",
+          })) || [];
       }
       if (result.capabilities.data.tools) {
         const tools = await client.listTools();
         result.capabilities.data.tools.list =
-          tools.tools?.map((tool: any) => tool.name) || [];
+          tools.tools?.map((tool) => ({
+            name: tool.name,
+            description: tool.description || "",
+          })) || [];
       }
       if (result.capabilities.data.resources) {
         const resources = await client.listResources();
         result.capabilities.data.resources.list =
-          resources.resources?.map((resource: any) => resource.name) || [];
+          resources.resources?.map((resource) => ({
+            name: resource.name,
+            description: resource.description || "",
+          })) || [];
       }
     } catch (error) {
       result.capabilities.error = `Capabilities check failed: ${

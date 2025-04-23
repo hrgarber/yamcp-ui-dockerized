@@ -1,8 +1,12 @@
 import chalk from "chalk";
 import { addMcpProviders } from "../../../store/provider";
-import { McpProvider } from "../../../store/schema";
+import { McpProvider, UrlSchema } from "../../../store/schema";
 import prompts from "prompts";
-import { parseProviderParameters } from "../../utils";
+import {
+  parseProviderParameters,
+  returnAndExit,
+  scanProviderAndConfirm,
+} from "../../utils";
 
 export async function addProvider() {
   const providerType = await prompts({
@@ -23,8 +27,16 @@ export async function addProvider() {
   const namePrompt = await prompts({
     type: "text",
     name: "value",
-    message: "Enter provider name:",
-    validate: (value) => value.length > 0 || "Name cannot be empty",
+    message: "Enter a name for the server (1-15 characters):",
+    validate: (value) => {
+      if (value.length === 0) {
+        return "Name cannot be empty";
+      } else if (value.length > 15) {
+        return "Name cannot be longer than 15 characters";
+      } else {
+        return true;
+      }
+    },
   });
 
   if (!namePrompt.value) {
@@ -33,18 +45,19 @@ export async function addProvider() {
   }
 
   const name = namePrompt.value;
+  let mcpProvider: McpProvider | undefined;
 
   if (providerType.value === "sse") {
     const urlPrompt = await prompts({
       type: "text",
       name: "value",
-      message: "Enter provider URL:",
+      message: "Enter server URL:",
       validate: (value) => {
         try {
-          new URL(value);
+          UrlSchema.parse(value);
           return true;
-        } catch {
-          return "Please enter a valid URL";
+        } catch (error) {
+          return `Please enter a valid URL e.g. https://example.com/`;
         }
       },
     });
@@ -54,83 +67,93 @@ export async function addProvider() {
       return;
     }
 
-    const provider: McpProvider = {
+    mcpProvider = {
       type: "sse",
       namespace: name,
       providerParameters: {
         url: urlPrompt.value,
       },
     };
-
-    addMcpProviders([provider]);
-    console.log(chalk.green(`✔ SSE provider "${name}" added successfully`));
-    return;
   }
 
-  const commandPrompt = await prompts({
-    type: "text",
-    name: "value",
-    message: "Enter command:",
-    validate: (value) => value.length > 0 || "Command cannot be empty",
-  });
+  if (providerType.value === "stdio") {
+    const commandPrompt = await prompts({
+      type: "text",
+      name: "value",
+      message: "Enter command:",
+      validate: (value) => value.length > 0 || "Command cannot be empty",
+    });
 
-  if (!commandPrompt.value) {
-    console.log("Operation cancelled");
-    return;
-  }
+    if (!commandPrompt.value) {
+      console.log("Operation cancelled");
+      return;
+    }
 
-  const addEnvVars = await prompts({
-    type: "confirm",
-    name: "value",
-    message: "Add environment variables?",
-    initial: false,
-  });
+    const addEnvVars = await prompts({
+      type: "confirm",
+      name: "value",
+      message: "Add environment variables?",
+      initial: false,
+    });
 
-  let envVars: Record<string, string> = {};
+    let envVars: Record<string, string> = {};
 
-  if (addEnvVars.value) {
-    let addingEnv = true;
-    while (addingEnv) {
-      const envKey = await prompts({
-        type: "text",
-        name: "value",
-        message: "Enter environment variable name:",
-        validate: (value) => value.length > 0 || "Name cannot be empty",
-      });
+    if (addEnvVars.value) {
+      let addingEnv = true;
+      while (addingEnv) {
+        const envKey = await prompts({
+          type: "text",
+          name: "value",
+          message: "Enter environment variable name:",
+          validate: (value) => value.length > 0 || "Name cannot be empty",
+        });
 
-      if (!envKey.value) {
-        addingEnv = false;
-        continue;
-      }
+        if (!envKey.value) {
+          addingEnv = false;
+          continue;
+        }
 
-      const envValue = await prompts({
-        type: "text",
-        name: "value",
-        message: `Enter value for ${envKey.value}:`,
-      });
+        const envValue = await prompts({
+          type: "text",
+          name: "value",
+          message: `Enter value for ${envKey.value}:`,
+        });
 
-      if (envValue.value) {
-        envVars[envKey.value] = envValue.value;
-      }
+        if (envValue.value) {
+          envVars[envKey.value] = envValue.value;
+        }
 
-      const continueAdding = await prompts({
-        type: "confirm",
-        name: "value",
-        message: "Add another environment variable?",
-        initial: false,
-      });
+        const continueAdding = await prompts({
+          type: "confirm",
+          name: "value",
+          message: "Add another environment variable?",
+          initial: false,
+        });
 
-      if (!continueAdding.value) {
-        addingEnv = false;
+        if (!continueAdding.value) {
+          addingEnv = false;
+        }
       }
     }
+
+    mcpProvider = parseProviderParameters(name, {
+      command: commandPrompt.value,
+      env: Object.entries(envVars).map(([k, v]) => `${k}=${v}`),
+    });
   }
 
-  const provider = parseProviderParameters(name, {
-    command: commandPrompt.value,
-    env: Object.entries(envVars).map(([k, v]) => `${k}=${v}`),
-  });
-
-  addMcpProviders([provider]);
-  console.log(chalk.green(`✔ Command provider "${name}" added successfully`));
+  // scan provider
+  if (mcpProvider) {
+    const confirmed = await scanProviderAndConfirm(mcpProvider);
+    if (!confirmed) {
+      returnAndExit(1);
+    }
+    addMcpProviders([mcpProvider]);
+    console.log(
+      chalk.green(
+        `✔ ${mcpProvider.type.toUpperCase()} server "${name}" added successfully`
+      )
+    );
+    returnAndExit(0);
+  }
 }

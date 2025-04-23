@@ -44,7 +44,7 @@ async function runGateway(workspaceName: string) {
     // Create proxy instance with logging hooks
     await gateway.start(workspaceProviders);
     logger.info(
-      "Gateway started successfully with loaded provider configurations"
+      "Gateway started successfully with loaded server configurations"
     );
   } catch (error) {
     logger.error("Error starting gateway");

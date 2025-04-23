@@ -44,7 +44,7 @@ export async function editWorkspaces(
     ([name, providers]) => ({
       title: name,
       value: name,
-      description: `${providers.length} provider${
+      description: `${providers.length} server${
         providers.length === 1 ? "" : "s"
       }`,
     })
@@ -209,7 +209,7 @@ async function editWorkspace(
   console.log(
     boxen(
       chalk.bold(`Workspace: ${chalk.green(workspaceName)}\n\n`) +
-        chalk.bold(`Providers (${finalSelection.length}):\n`) +
+        chalk.bold(`Servers (${finalSelection.length}):\n`) +
         finalSelection
           .map((provider) => `  ${chalk.green("•")} ${provider}`)
           .join("\n"),
