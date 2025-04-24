@@ -113,7 +113,10 @@ export function returnAndExit(code: number) {
   process.exit(code);
 }
 
-export async function scanProviderAndConfirm(mcpProvider: McpProvider) {
+export async function scanProviderAndConfirm(
+  mcpProvider: McpProvider,
+  initial: boolean = false
+) {
   const scanResult = await scanProvider(mcpProvider);
   if (!isScanSuccessful(scanResult)) {
     console.log(
@@ -124,7 +127,7 @@ export async function scanProviderAndConfirm(mcpProvider: McpProvider) {
       type: "confirm",
       name: "value",
       message: "Scan failed, Do you still want to add provider?",
-      initial: false,
+      initial: initial,
     });
 
     if (!continueAdding.value) {
@@ -180,5 +183,59 @@ export function printScanResult(scanResult: ScanResult) {
     console.log(chalk.bold("Server Capabilities:"));
     console.log(chalk.dim("---------------------"));
     console.log(treeify.asTree(tree, true, true));
+  }
+}
+
+export function buildWorkspaceTree(
+  workspaces: Record<string, string[]>
+): Record<string, Record<string, string>> {
+  // Create tree structure for workspaces
+  const workspaceTree: Record<string, Record<string, string>> = {};
+  Object.entries(workspaces).forEach(([wsName, providers]) => {
+    workspaceTree[wsName] = providers.reduce((acc, provider) => {
+      acc[provider] = "";
+      return acc;
+    }, {} as Record<string, string>);
+  });
+  return workspaceTree;
+}
+
+export async function displayWorkspacesChoice(
+  workspaces: Record<string, string[]>
+) {
+  // Create selection list
+  const choices = [
+    ...Object.keys(workspaces).map((ws) => {
+      const providerCount = workspaces[ws].length;
+      const showCount = 4;
+      const notDisplayedHint =
+        providerCount > showCount ? `+ ${providerCount - showCount} more` : "";
+      const description = `${providerCount} servers (${workspaces[ws]
+        .slice(0, showCount)
+        .join(", ")} ${notDisplayedHint})`;
+      return {
+        title: ws,
+        value: ws,
+        description: description,
+      };
+    }),
+    {
+      title: "Exit",
+      value: "exit",
+      description: "Return to main menu",
+    },
+  ];
+
+  const response = await prompts({
+    type: "select",
+    name: "workspace",
+    message: "Select a workspace to view details (use arrow keys)",
+    choices,
+  });
+
+  if (!response.workspace || response.workspace === "exit") {
+    return;
+  } else {
+    return response.workspace;
   }
 }

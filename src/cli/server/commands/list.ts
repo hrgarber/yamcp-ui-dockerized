@@ -1,7 +1,11 @@
 import chalk from "chalk";
 import prompts from "prompts";
 import { McpProvider } from "../../../store/schema";
-import { buildProviderTree, printScanResult, returnAndExit } from "../../utils";
+import {
+  buildProviderTree,
+  printScanResult,
+  returnAndExit,
+} from "../../common";
 import treeify from "treeify";
 import {
   getScanFailures,

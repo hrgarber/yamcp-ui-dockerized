@@ -4,7 +4,7 @@ import { GatewayRouter } from "../gatewayRouter";
 import { McpGateway } from "../gateway";
 import { Logger } from "../utility/logger";
 import { loadProvidersMap, loadWorkspaceMap } from "../store/loader";
-import { getWorkspaceProviders } from "./utils";
+import { getWorkspaceProviders } from "./common";
 import { v4 as uuidv4 } from "uuid";
 function getLogNamespace(workspaceName: string) {
   const randomString = uuidv4().replace(/-/g, "").substring(0, 8);

@@ -1,14 +1,20 @@
 import { Command } from "commander";
 import { LOG_DIR } from "../../config";
+import chalk from "chalk";
 
 export function logCommand(program: Command) {
-  const log = program.command("log").description("View logs");
-  // print the LOG_DIR from config
-  const logDir = LOG_DIR;
-  if (logDir) {
-    console.log(`You can find logs in ${logDir}`);
-  } else {
-    console.log("Logs directory not set");
-  }
-  return log;
+  program
+    .command("log")
+    .description("View logs")
+    .action(() => {
+      // print the LOG_DIR from config
+      const logDir = LOG_DIR;
+      if (logDir) {
+        console.log(
+          chalk.green(`\n\nYou can find logs in ${chalk.bold(logDir)}\n\n`)
+        );
+      } else {
+        console.log(chalk.red("Logs directory not set"));
+      }
+    });
 }

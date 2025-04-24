@@ -2,7 +2,12 @@ import chalk from "chalk";
 import boxen from "boxen";
 import prompts from "prompts";
 import treeify from "treeify";
-import { buildProviderTree, getWorkspaceProviders } from "../../utils";
+import {
+  buildProviderTree,
+  displayWorkspacesChoice,
+  getWorkspaceProviders,
+  returnAndExit,
+} from "../../common";
 import { McpProvider } from "../../../store/schema";
 
 export async function listWorkspace(
@@ -30,63 +35,22 @@ export async function listWorkspace(
     return;
   }
 
-  // Create tree structure for workspaces
-  const workspaceTree: Record<string, Record<string, string>> = {};
-  Object.entries(workspaces).forEach(([wsName, providers]) => {
-    workspaceTree[wsName] = providers.reduce((acc, provider) => {
-      acc[provider] = "";
-      return acc;
-    }, {} as Record<string, string>);
-  });
-
   while (true) {
     // Clear console for better visibility
     console.clear();
-
-    // Create selection list
-    const choices = [
-      ...Object.keys(workspaces).map((ws) => {
-        const providerCount = workspaces[ws].length;
-        const showCount = 4;
-        const notDisplayedHint =
-          providerCount > showCount
-            ? `+ ${providerCount - showCount} more`
-            : "";
-        const description = `${providerCount} servers (${workspaces[ws]
-          .slice(0, showCount)
-          .join(", ")} ${notDisplayedHint})`;
-        return {
-          title: ws,
-          value: ws,
-          description: description,
-        };
-      }),
-      {
-        title: "Exit",
-        value: "exit",
-        description: "Return to main menu",
-      },
-    ];
-
-    const response = await prompts({
-      type: "select",
-      name: "workspace",
-      message: "Select a workspace to view details (use arrow keys)",
-      choices,
-    });
-
-    if (!response.workspace || response.workspace === "exit") {
-      break;
+    // displace list of workspaces to let user selec
+    const selectedWorkspace = await displayWorkspacesChoice(workspaces);
+    if (!selectedWorkspace) {
+      returnAndExit(0);
     }
-
     // Display selected workspace
     console.clear();
 
     const wsProviders = getWorkspaceProviders(
       availableProviders,
-      workspaces[response.workspace]
+      workspaces[selectedWorkspace]
     );
-    await displayWorkspaceInteractive(response.workspace, wsProviders);
+    await displayWorkspaceInteractive(selectedWorkspace, wsProviders);
   }
 }
 

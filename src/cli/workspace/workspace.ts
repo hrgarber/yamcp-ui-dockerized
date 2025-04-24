@@ -5,11 +5,10 @@ import { loadProvidersMap } from "../../store/loader";
 import { createWorkspace } from "./commands/create";
 import { listWorkspace } from "./commands/list";
 import { editWorkspaces } from "./commands/edit";
+import { scanWorkspaces } from "./commands/scan";
 
 export function workspaceCommands(program: Command) {
-  const workspace = program
-    .command("ws")
-    .description("Manage MCP workspaces");
+  const workspace = program.command("ws").description("Manage MCP workspaces");
 
   workspace
     .command("create")
@@ -36,6 +35,15 @@ export function workspaceCommands(program: Command) {
       const workspaces = getWorkspaces();
       const providers = loadProvidersMap();
       editWorkspaces(workspaces, Object.values(providers));
+    });
+
+  workspace
+    .command("scan")
+    .description("Scan workspaces")
+    .action(async () => {
+      const workspaces = getWorkspaces();
+      const availableProviders = loadProvidersMap();
+      scanWorkspaces(workspaces, availableProviders);
     });
 
   workspace
