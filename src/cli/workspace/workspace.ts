@@ -14,6 +14,7 @@ export function workspaceCommands(program: Command) {
     .command("create")
     .description("Create a new workspace")
     .action(async () => {
+      console.clear();
       const providers = loadProvidersMap();
       createWorkspace(Object.values(providers));
     });
@@ -23,6 +24,7 @@ export function workspaceCommands(program: Command) {
     .option("-n, --name <name>", "name of the workspace to list")
     .description("List workspaces")
     .action(async (options) => {
+      console.clear();
       const workspaces = getWorkspaces();
       const providers = loadProvidersMap();
       listWorkspace(workspaces, providers, options.name);
@@ -32,6 +34,7 @@ export function workspaceCommands(program: Command) {
     .command("edit")
     .description("Edit a workspace")
     .action(async () => {
+      console.clear();
       const workspaces = getWorkspaces();
       const providers = loadProvidersMap();
       editWorkspaces(workspaces, Object.values(providers));
@@ -41,6 +44,7 @@ export function workspaceCommands(program: Command) {
     .command("scan")
     .description("Scan workspaces")
     .action(async () => {
+      console.clear();
       const workspaces = getWorkspaces();
       const availableProviders = loadProvidersMap();
       scanWorkspaces(workspaces, availableProviders);
@@ -51,6 +55,7 @@ export function workspaceCommands(program: Command) {
     .description("Delete a workspace")
     .argument("<workspace-name>", "name of the workspace to delete")
     .action(async (name) => {
+      console.clear();
       const workspaces = getWorkspaces();
 
       if (!workspaces[name]) {

@@ -9,6 +9,8 @@ import {
   returnAndExit,
 } from "../../common";
 import { McpProvider } from "../../../store/schema";
+import { PROVIDERS_CONFIG_PATH } from "../../../config";
+import { WORKSPACES_CONFIG_PATH } from "../../../config";
 
 export async function listWorkspace(
   workspaces: Record<string, string[]>,
@@ -19,12 +21,17 @@ export async function listWorkspace(
 
   if (workspaceCount === 0) {
     console.log(
-      boxen(chalk.yellow("No workspaces found"), {
-        padding: 1,
-        margin: 1,
-        borderStyle: "round",
-        borderColor: "yellow",
-      })
+      boxen(
+        chalk.yellow(
+          "No workspaces found\nUse 'ws create' to create a workspace"
+        ),
+        {
+          padding: 1,
+          margin: 1,
+          borderStyle: "round",
+          borderColor: "yellow",
+        }
+      )
     );
     return;
   }
@@ -38,6 +45,11 @@ export async function listWorkspace(
   while (true) {
     // Clear console for better visibility
     console.clear();
+    // Show config path if it exists
+    if (WORKSPACES_CONFIG_PATH) {
+      console.log(chalk.dim("Workspaces are configured in the config file:"));
+      console.log(chalk.dim(WORKSPACES_CONFIG_PATH));
+    }
     // displace list of workspaces to let user selec
     const selectedWorkspace = await displayWorkspacesChoice(workspaces);
     if (!selectedWorkspace) {

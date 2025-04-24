@@ -17,6 +17,7 @@ export function serverCommands(program: Command) {
     .command("add")
     .description("Add a new MCP server (local or remote)")
     .action(async () => {
+      console.clear();
       addProvider();
     });
 
@@ -24,6 +25,7 @@ export function serverCommands(program: Command) {
     .command("list")
     .description("List all MCP servers")
     .action(() => {
+      console.clear();
       const providersMap = getMcpProviders();
       const providers = Object.values(providersMap);
       printProviders(providers);
@@ -34,6 +36,7 @@ export function serverCommands(program: Command) {
     .description("Remove a server")
     .argument("<name>", "name of the server to remove")
     .action(async (name) => {
+      console.clear();
       const providers = getMcpProviders();
 
       if (!providers[name]) {
@@ -62,6 +65,7 @@ export function serverCommands(program: Command) {
     .description("Import server configuration from a file")
     .argument("<config>", "path to the config file")
     .action(async (config) => {
+      console.clear();
       const providers = loadProviderConfigFile(config);
       if (providers?.length === 0) {
         console.error(

@@ -4,7 +4,7 @@
   "description": "",
   "types": "dist/index.d.ts",
   "bin": {
-    "mcpx": "./dist/index.js"
+    "mcpx": "dist/index.js"
   },
   "scripts": {
     "dev": "tsc --watch",
@@ -15,8 +15,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "start": "node dist/index.js",
-    "prepublishOnly": "pnpm run build",
-    "publish": "npm publish"
+    "prepublishOnly": "pnpm run build"
   },
   "keywords": [],
   "author": "",
@@ -37,6 +36,7 @@
     "commander": "^13.1.0",
     "dotenv": "^16.4.7",
     "enquirer": "^2.4.1",
+    "env-paths": "^3.0.0",
     "net": "^1.0.2",
     "open": "^10.1.0",
     "ora": "^8.2.0",

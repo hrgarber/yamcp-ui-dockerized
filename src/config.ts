@@ -1,18 +1,15 @@
 import path from "path";
+import envPaths from "env-paths";
+
+const paths = envPaths("mcpx");
 
 // Server
 export const SERVER_NAME = "tesser_mcp_gateway";
 export const SERVER_VERSION = "1.0.0";
 
 // Store
-const storeDir = ".store";
-export const PROVIDERS_CONFIG_PATH = path.join(
-  __dirname,
-  `./${storeDir}/providers.json`
-);
-export const WORKSPACES_CONFIG_PATH = path.join(
-  __dirname,
-  `./${storeDir}/workspaces.json`
-);
+const storeDir = paths.data;
+export const PROVIDERS_CONFIG_PATH = path.join(storeDir, `./providers.json`);
+export const WORKSPACES_CONFIG_PATH = path.join(storeDir, `./workspaces.json`);
 
-export const LOG_DIR = path.join(__dirname, `./.logs`);
+export const LOG_DIR = paths.log;

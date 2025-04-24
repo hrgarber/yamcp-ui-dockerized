@@ -12,6 +12,7 @@ import {
   isScanSuccessful,
   scanProvider,
 } from "../../../providerScanner";
+import { PROVIDERS_CONFIG_PATH } from "../../../config";
 
 export async function printProviders(providers: McpProvider[]) {
   if (providers.length === 0) {
@@ -21,7 +22,10 @@ export async function printProviders(providers: McpProvider[]) {
 
   console.log(chalk.bold("\nConfigured MCP Servers:"));
   console.log(chalk.dim("----------------------"));
-
+  if (PROVIDERS_CONFIG_PATH) {
+    console.log(chalk.dim("Servers are configured in the config file:"));
+    console.log(chalk.dim(PROVIDERS_CONFIG_PATH));
+  }
   // Create provider selection options
   const providerOptions = providers.map((provider) => {
     const tree = buildProviderTree(provider);
@@ -37,15 +41,6 @@ export async function printProviders(providers: McpProvider[]) {
     console.log(chalk.yellow("\nServer viewing cancelled."));
     process.exit(0);
   };
-
-  // Show initial list of providers
-  providers.forEach((provider) => {
-    console.log(
-      `  ${chalk.green("•")} ${chalk.cyan(provider.namespace)} - ${chalk.dim(
-        provider.type
-      )}`
-    );
-  });
 
   // Provider selection prompt
   const response = await prompts(
