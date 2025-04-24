@@ -9,7 +9,6 @@ import {
   returnAndExit,
 } from "../../common";
 import { McpProvider } from "../../../store/schema";
-import { PROVIDERS_CONFIG_PATH } from "../../../config";
 import { WORKSPACES_CONFIG_PATH } from "../../../config";
 
 export async function listWorkspace(

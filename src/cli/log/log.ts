@@ -1,9 +1,5 @@
 import { Command } from "commander";
-import {
-  LOG_DIR,
-  PROVIDERS_CONFIG_PATH,
-  WORKSPACES_CONFIG_PATH,
-} from "../../config";
+import { LOG_DIR } from "../../config";
 import chalk from "chalk";
 
 export function logCommand(program: Command) {
