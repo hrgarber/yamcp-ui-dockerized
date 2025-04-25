@@ -12,7 +12,7 @@
   },
   "scripts": {
     "dev": "tsc --watch",
-    "build": "pnpm run clean && tsc && pnpm run copy-example",
+    "build": "pnpm run clean && tsc && pnpm run copy-example && chmod +x dist/index.js",
     "copy-example": "cp src/example-servers.json dist/example-servers.json",
     "inspect": "npx @modelcontextprotocol/inspector node dist/index.js",
     "clean": "rm -rf dist",

@@ -10,13 +10,24 @@ export async function createWorkspaceAction() {
   const providers = Object.values(loadProvidersMap());
 
   console.log(
-    boxen(chalk.bold.cyan("MCP Workspace Creation Wizard"), {
-      padding: 1,
-      margin: 1,
-      borderStyle: "round",
-      borderColor: "cyan",
-    })
+    boxen(
+      chalk.bold.cyan(
+        providers.length > 0
+          ? "YAMCP Workspace Creation Wizard"
+          : "No servers found. \nUse `server add|import` to add some servers first."
+      ),
+      {
+        padding: 1,
+        margin: 1,
+        borderStyle: "round",
+        borderColor: "cyan",
+      }
+    )
   );
+
+  if (providers.length === 0) {
+    return;
+  }
 
   // Handle CTRL+C gracefully
   const onCancel = () => {
