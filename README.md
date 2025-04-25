@@ -6,23 +6,23 @@ MCPX is a command-line tool for organizing and managing MCP Servers as local wor
 
 ```bash
 # Install MCPX
-npm install -g @mcpspace/mcpx  # or use npx @mcpspace/mcpx
+npm install -g yamcp  # or use npx yamcp
 
 # Import servers (choose one)
-mcpx server import [config]    # import servers from config file (https://example.com)
-mcpx server add         # or add manuall
+yamcp server import [config]    # import servers from config file (https://example.com)
+yamcp server add         # or add manuall
 
 # create workspace
-mcpx ws create
+yamcp yam create
 
 # Run workspace in your AI app
-mcpx run <workspace-name>
+yamcp run <yam-workspace-name>
 ```
 
 ## 🔑 Key Concepts
 
 - **MCP Servers**: Remote or local servers that provide Model Context Protocol services
-- **Workspaces**: Collections of MCP servers grouped together to be shared with AI Apps (e.g. a workspace for coding, writing, design, magic making!)
+- **Workspaces (YAMs)**: Collections of MCP servers grouped together to be shared with AI Apps (e.g. a workspace for coding, writing, design, magic making!)
 - **Gateway**: A local MCP server that manages connections to configured MCP servers in a workspace and exposes them through a unified server to AI App's MCP clients
 
 With MCPX, you can:
@@ -33,141 +33,129 @@ With MCPX, you can:
 - Monitor server communications through consolidated logging
 - Configure and modify workspace settings easily
 
-## 🧭 Top-Level Commands
+## Top-Level Commands
 
 ```bash
-mcpx [command] [subcommand] [flags]
+yamcp [command] [subcommand] [flags]
 ```
 
 Available top-level commands:
 
 - `server` - Manage MCP providers
-- `ws` - Manage workspaces
+- `yam` - Manage workspaces (yams)
 - `run` - Run the gateway with a workspace
 - `log` - View the server log location
 
 ---
 
-## 🔧 **MCP Server Management Commands**
+## 🔧 **Mcp Server Management Commands**
 
-### ➕ Add a new MCP server (local or remote)
-
-```bash
-mcpx server add
-```
-
-Interactive flow that guides you through:
-
-- Selecting server type (Local Command/stdio or Remote Server/SSE)
-- Setting server name
-- Configuring connection details (command or URL)
-- Optional environment variables (for local servers)
-
-### 📋 List all added MCP servers
+### Server Commands
 
 ```bash
-mcpx server list
+yamcp server add      # Add a new MCP server (interactive)
+yamcp server list     # List all configured servers and their status
+yamcp server remove   # Remove a server configuration
+yamcp server import   # Import server configurations from a JSON file
 ```
-
-Displays all configured servers with their details and allows you to:
-
-- View server configurations
-- Scan server capabilities
-- Check server status
-
-### ❌ Remove a server
-
-```bash
-mcpx server remove [name]
-```
-
-Removes a server configuration by its name, with confirmation prompt. If no name is provided, you'll be prompted to select a server to remove.
-
-### ⚙️ Import servers from config file
-
-```bash
-mcpx server import [config]
-```
-
-Bulk imports server configurations from a JSON file. If no config file is provided and a default configuration exists, you'll be prompted to use it.
 
 ---
 
-## 🧪 **Workspace Commands**
+## 🍠 **Yam Workspace Management Commands**
 
-### 📦 Create a new workspace
-
-```bash
-mcpx ws create
-```
-
-Interactive flow that guides you through:
-
-- Setting workspace name
-- Selecting servers to include
-- Confirming workspace creation
-
-### 📋 List workspaces
+### Workspace Commands
 
 ```bash
-mcpx ws list [--name <workspace-name>]
+yamcp yam create      # Create a new workspace (interactive)
+yamcp yam list        # List all workspaces or show specific workspace details
+yamcp yam edit        # Modify an existing workspace configuration
+yamcp yam delete      # Delete a workspace configuration
 ```
 
-Lists all workspaces or shows details of a specific workspace.
-
-### ✏️ Edit a workspace
+### Runtime Commands
 
 ```bash
-mcpx ws edit
+yamcp run <yam-workspace-name>   # Start the gateway with specified workspace
+yamcp log                    # View server communication logs
 ```
-
-Interactive flow to:
-
-- Select a workspace to edit
-- Modify included servers
-- Update workspace settings
-
-### ❌ Delete a workspace
-
-```bash
-mcpx ws delete [workspace-name]
-```
-
-Deletes a workspace configuration, with confirmation prompt.
-If no workspace name is provided, you'll be prompted to select from existing workspaces.
-
-### 🚀 Run the gateway
-
-```bash
-mcpx run <workspace-name>
-```
-
-Starts the gateway server with the specified workspace configuration.
-
-### 📊 View Logs
-
-```bash
-mcpx log
-```
-
-Access server communication logs stored in the consolidated log store.
 
 ---
 
-## ✅ Command Cheat Sheet
+## ✅ Command Reference
 
-| Command          | Description                        | Example                            |
-| ---------------- | ---------------------------------- | ---------------------------------- |
-| `server add`     | Add a new MCP server interactively | `mcpx server add`                  |
-| `server list`    | List all configured servers        | `mcpx server list`                 |
-| `server remove`  | Remove a server by name            | `mcpx server remove [name]`        |
-| `server import`  | Import servers from config file    | `mcpx server import [config]`      |
-| `ws create`      | Create a new workspace             | `mcpx ws create`                   |
-| `ws list`        | List all workspaces                | `mcpx ws list`                     |
-| `ws list --name` | Show specific workspace details    | `mcpx ws list --name my-workspace` |
-| `ws edit`        | Edit workspace configuration       | `mcpx ws edit`                     |
-| `ws delete`      | Delete a workspace                 | `mcpx ws delete [workspace-name]`  |
-| `run`            | Start gateway with workspace       | `mcpx run <workspace-name>`        |
-| `log`            | View server logs                   | `mcpx log`                         |
+| Command           | Description             | Example                              |
+| ----------------- | ----------------------- | ------------------------------------ |
+| `server add`      | Add a new MCP server    | `yamcp server add`                   |
+| `server list`     | List configured servers | `yamcp server list`                  |
+| `server remove`   | Remove a server         | `yamcp server remove [name]`         |
+| `server import`   | Import server config    | `yamcp server import [config]`       |
+| `yam create`      | Create workspace        | `yamcp yam create`                   |
+| `yam list`        | List workspaces         | `yamcp yam list`                     |
+| `yam list --name` | Show workspace details  | `yamcp yam list --name my-workspace` |
+| `yam edit`        | Edit workspace          | `yamcp yam edit`                     |
+| `yam delete`      | Delete workspace        | `yamcp yam delete [workspace-name]`  |
+| `run`             | Start gateway           | `yamcp run <workspace-name>`         |
+| `log`             | View logs               | `yamcp log`                          |
 
 ---
+
+## 🏗️ System Architecture
+
+```mermaid
+graph TB
+    CLI[CLI Commands]
+    GW[McpGateway]
+    GS[GatewayServer]
+    GR[GatewayRouter]
+    LOG[Logger]
+    STORE[(Store)]
+    AI_APP[AI App]
+
+    %% CLI Command Flow
+    CLI -->|manages| STORE
+    CLI -->|runs| GW
+
+    %% Gateway Components
+    GW -->|uses| GS
+    GW -->|uses| GR
+    GW -->|logs| LOG
+
+    %% Server & Router
+    GS -->|stdio transport| AI_APP
+    GR -->|connects to| SERVERX
+    GR -->|connects to| SERVERY
+
+    %% Data Store
+    STORE -->|loads config| GW
+
+    %% External MCP Servers
+    subgraph "Workspace Servers"
+        SERVERX["Server x (Stdio)"]
+        SERVERY["Server y (SSE)"]
+    end
+    %% Store Components
+    subgraph "Configuration Store"
+        PROVIDERS[(Provider Config)]
+        WORKSPACES[(Workspace Config)]
+    end
+    STORE --- PROVIDERS
+    STORE --- WORKSPACES
+
+    classDef primary fill:#2374ab,stroke:#2374ab,color:#fff
+    classDef secondary fill:#ff7e67,stroke:#ff7e67,color:#fff
+    classDef store fill:#95b8d1,stroke:#95b8d1,color:#fff
+
+    class GW,GS,GR primary
+    class CLI,AI_APP secondary
+    class STORE,PROVIDERS,WORKSPACES store
+```
+
+The diagram shows the main components of the MCPX system:
+
+- **CLI Commands**: User interface for managing servers and workspaces
+- **McpGateway**: Core component that coordinates the Gateway Server and Router
+- **GatewayServer**: Handles communication with AI Apps via stdio transport
+- **GatewayRouter**: Manages connections to configured MCP servers
+- **Logger**: Provides consolidated logging for all components
+- **Store**: Manages configuration for providers and workspaces
+- **MCP Servers**: Both local (stdio) and remote (SSE) servers that provide MCP services
