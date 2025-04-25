@@ -10,12 +10,12 @@ import {
 } from "../../common";
 import { McpProvider } from "../../../store/schema";
 import { WORKSPACES_CONFIG_PATH } from "../../../config";
+import { loadProvidersMap } from "../../../store/loader";
+import { getWorkspaces } from "../../../store/workspace";
+export async function listWorkspaceAction(name?: string) {
+  const workspaces = getWorkspaces();
+  const availableProviders = loadProvidersMap();
 
-export async function listWorkspace(
-  workspaces: Record<string, string[]>,
-  availableProviders: Record<string, McpProvider>,
-  name?: string
-) {
   const workspaceCount = Object.keys(workspaces).length;
 
   if (workspaceCount === 0) {

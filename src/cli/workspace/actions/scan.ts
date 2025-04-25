@@ -5,15 +5,14 @@ import {
   returnAndExit,
 } from "../../common";
 import { scanProvider } from "../../../providerScanner";
-import { McpProvider } from "../../../store/schema";
 import { getScanFailures } from "../../../providerScanner";
 import { isScanSuccessful } from "../../../providerScanner";
 import chalk from "chalk";
-
-export async function scanWorkspaces(
-  workspaces: Record<string, string[]>,
-  availableProviders: Record<string, McpProvider>
-) {
+import { loadProvidersMap } from "../../../store/loader";
+import { getWorkspaces } from "../../../store/workspace";
+export async function scanWorkspacesAction() {
+  const workspaces = getWorkspaces();
+  const availableProviders = loadProvidersMap();
   const selectedWorkspace = await displayWorkspacesChoice(workspaces);
   if (!selectedWorkspace) {
     return;

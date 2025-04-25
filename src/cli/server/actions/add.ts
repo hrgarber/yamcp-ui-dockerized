@@ -8,7 +8,7 @@ import {
   scanProviderAndConfirm,
 } from "../../common";
 
-export async function addProvider() {
+export async function addProviderAction() {
   const providerType = await prompts({
     type: "select",
     name: "value",

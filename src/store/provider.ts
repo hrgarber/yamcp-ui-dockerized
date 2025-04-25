@@ -1,4 +1,4 @@
-import { loadProvidersMap, saveProviders } from "./loader";
+import { loadProvidersMap, saveProviders, deleteProviders } from "./loader";
 import type { McpProvider } from "./schema";
 
 export function addMcpProviders(providers: McpProvider[]) {
@@ -19,6 +19,10 @@ export function removeMcpProvider(name: string) {
   let config = loadProvidersMap();
   delete config[name];
   saveProviders(config);
+}
+
+export function removeAllProviders() {
+  deleteProviders();
 }
 
 export function getMcpProviders() {

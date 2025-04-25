@@ -4,12 +4,12 @@ import ora from "ora";
 import boxen from "boxen";
 
 import { McpProvider } from "../../../store/schema";
-import { addWorkspace } from "../../../store/workspace";
+import { addWorkspace, getWorkspaces } from "../../../store/workspace";
+import { loadProvidersMap } from "../../../store/loader";
 
-export async function editWorkspaces(
-  workspaces: Record<string, string[]>,
-  availableProviders: McpProvider[]
-) {
+export async function editWorkspacesAction() {
+  const workspaces = getWorkspaces();
+  const availableProviders = Object.values(loadProvidersMap());
   // Welcome message
   console.log(
     boxen(chalk.bold.cyan("Edit Workspace"), {

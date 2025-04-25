@@ -1,12 +1,12 @@
 import chalk from "chalk";
 import prompts from "prompts";
-import { McpProvider } from "../../../store/schema";
+import { getMcpProviders } from "../../../store/provider";
 import {
-  buildProviderTree,
+  buildProviderOptions,
   printScanResult,
   returnAndExit,
 } from "../../common";
-import treeify from "treeify";
+
 import {
   getScanFailures,
   isScanSuccessful,
@@ -14,7 +14,9 @@ import {
 } from "../../../providerScanner";
 import { PROVIDERS_CONFIG_PATH } from "../../../config";
 
-export async function printProviders(providers: McpProvider[]) {
+export async function listProvidersAction() {
+  const providersMap = getMcpProviders();
+  const providers = Object.values(providersMap);
   if (providers.length === 0) {
     console.log(chalk.yellow("No MCP servers configured"));
     return;
@@ -26,20 +28,14 @@ export async function printProviders(providers: McpProvider[]) {
     console.log(chalk.dim("Servers are configured in the config file:"));
     console.log(chalk.dim(PROVIDERS_CONFIG_PATH));
   }
+
   // Create provider selection options
-  const providerOptions = providers.map((provider) => {
-    const tree = buildProviderTree(provider);
-    return {
-      title: `${provider.namespace} (${provider.type})`,
-      value: provider,
-      description: `${treeify.asTree(tree, true, true)}`,
-    };
-  });
+  const providerOptions = buildProviderOptions(providers);
 
   // Handle CTRL+C gracefully
   const onCancel = () => {
     console.log(chalk.yellow("\nServer viewing cancelled."));
-    process.exit(0);
+    returnAndExit(0);
   };
 
   // Provider selection prompt
@@ -47,9 +43,9 @@ export async function printProviders(providers: McpProvider[]) {
     {
       type: "select",
       name: "selectedProvider",
-      message: "Select a server to scan:",
+      message: "Select a server to scan their capabilities:",
       choices: providerOptions,
-      hint: "- Use arrow-keys. Return to select. Ctrl+C to exit",
+      hint: "Use arrow keys to navigate, Enter to select, Esc or Ctrl+C to exit",
     },
     { onCancel }
   );

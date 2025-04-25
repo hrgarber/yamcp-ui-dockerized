@@ -7,7 +7,7 @@ import {
   isScanSuccessful,
 } from "../../../providerScanner";
 
-export async function scanProviders(providers: McpProvider[]) {
+export async function scanProvidersAction(providers: McpProvider[]) {
   if (providers.length === 0) {
     console.log(chalk.yellow("No MCP providers configured"));
     return;

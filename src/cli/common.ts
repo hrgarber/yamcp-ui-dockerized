@@ -90,6 +90,18 @@ export function buildProviderTree(provider: McpProvider): TreeNode {
   return tree;
 }
 
+// Create provider selection options
+export function buildProviderOptions(providers: McpProvider[]) {
+  return providers.map((provider) => {
+    const tree = buildProviderTree(provider);
+    return {
+      title: `- ${provider.namespace} (${provider.type})`,
+      value: provider,
+      description: `${treeify.asTree(tree, true, true)}`,
+    };
+  });
+}
+
 export function getWorkspaceProviders(
   providers: Record<string, McpProvider>,
   workspace: Namespace[],
@@ -106,7 +118,7 @@ export function getWorkspaceProviders(
     }
     return provider;
   });
-  return workspaceProviders;
+  return workspaceProviders.filter((provider) => provider);
 }
 
 export function returnAndExit(code: number) {
@@ -201,7 +213,8 @@ export function buildWorkspaceTree(
 }
 
 export async function displayWorkspacesChoice(
-  workspaces: Record<string, string[]>
+  workspaces: Record<string, string[]>,
+  promptMessage: string = "Select a workspace to view details (use arrow keys)"
 ) {
   // Create selection list
   const choices = [
@@ -229,7 +242,7 @@ export async function displayWorkspacesChoice(
   const response = await prompts({
     type: "select",
     name: "workspace",
-    message: "Select a workspace to view details (use arrow keys)",
+    message: promptMessage,
     choices,
   });
 

@@ -1,0 +1,23 @@
+{
+  "mcp-server-fetch": {
+    "command": "pipx",
+    "args": ["run", "mcp-server-fetch"]
+  },
+  "filesystem": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@modelcontextprotocol/server-filesystem",
+      "~/Desktop",
+      "~/Documents"
+    ]
+  },
+  "server-memory": {
+    "command": "npx",
+    "args": ["-y", "@modelcontextprotocol/server-memory"]
+  },
+  "sequential-thinking": {
+    "command": "npx",
+    "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+  }
+}

@@ -54,9 +54,11 @@ function loadFile<T, U = T>(
     jsonConfig = JSON.parse(configContent);
   } catch (error) {
     if (error instanceof Error) {
-      throw new Error(`Invalid JSON in config file: ${error.message}`);
+      throw new Error(
+        `Failed to parse config file: ${configPath} \n ${error.message}`
+      );
     }
-    throw new Error("Invalid JSON in config file");
+    throw new Error(`Failed to parse config file: ${configPath}`);
   }
 
   const validatedConfig = schema.parse(jsonConfig);
@@ -108,6 +110,14 @@ export function saveProviders(
   const targetPath = configPath || defaultConfigPath;
   mkdirIfNotExists(targetPath);
   fs.writeFileSync(targetPath, JSON.stringify(providers, null, 2));
+}
+
+export function deleteProviders(configPath?: string) {
+  const defaultConfigPath = PROVIDERS_CONFIG_PATH;
+  const targetPath = configPath || defaultConfigPath;
+  if (fs.existsSync(targetPath)) {
+    fs.unlinkSync(targetPath);
+  }
 }
 
 export function saveWorkspaceMap(

@@ -12,4 +12,9 @@ const storeDir = paths.data;
 export const PROVIDERS_CONFIG_PATH = path.join(storeDir, `./providers.json`);
 export const WORKSPACES_CONFIG_PATH = path.join(storeDir, `./workspaces.json`);
 
+export const EXAMPLE_SERVERS_CONFIG_PATH = path.join(
+  __dirname,
+  `./example-servers.json`
+);
+
 export const LOG_DIR = paths.log;

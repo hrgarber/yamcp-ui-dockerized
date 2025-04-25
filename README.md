@@ -5,13 +5,17 @@ MCPX is a command-line tool for organizing and managing MCP Servers as local wor
 ## 🚀 Quick Start
 
 ```bash
-# Import your MCP servers from config
-mcpx server import config.json
+# Install MCPX
+npm install -g @mcpspace/mcpx  # or use npx @mcpspace/mcpx
 
-# Create a workspace
+# Import servers (choose one)
+mcpx server import  <config.json>  # import servers from config file (https://example.com)
+mcpx server add                  # or add manuall
+
+# create workspace
 mcpx ws create
 
-# Run the gateway with your workspace
+# Run workspace in your AI app
 mcpx run <workspace-name>
 ```
 

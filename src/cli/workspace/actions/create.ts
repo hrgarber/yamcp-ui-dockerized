@@ -3,12 +3,12 @@ import chalk from "chalk";
 import ora from "ora";
 import boxen from "boxen";
 
-import { McpProvider } from "../../../store/schema";
 import { addWorkspace } from "../../../store/workspace";
+import { loadProvidersMap } from "../../../store/loader";
 
-export async function createWorkspace(providers: McpProvider[]) {
-  // Welcome message in a box
-  // TODO: move to top level command
+export async function createWorkspaceAction() {
+  const providers = Object.values(loadProvidersMap());
+
   console.log(
     boxen(chalk.bold.cyan("MCP Workspace Creation Wizard"), {
       padding: 1,
