@@ -5,7 +5,7 @@ import { editWorkspacesAction } from "./actions/edit";
 import { scanWorkspacesAction } from "./actions/scan";
 import { deleteWorkspaceAction } from "./actions/delete";
 export function workspaceCommands(program: Command) {
-  const workspace = program.command("ws").description("Manage MCP workspaces");
+  const workspace = program.command("yam").description("Manage yam workspaces");
 
   workspace
     .command("create")

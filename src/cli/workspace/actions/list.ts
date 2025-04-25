@@ -22,7 +22,7 @@ export async function listWorkspaceAction(name?: string) {
     console.log(
       boxen(
         chalk.yellow(
-          "No workspaces found\nUse 'ws create' to create a workspace"
+          "No workspaces found\nUse 'yam create' to create a workspace"
         ),
         {
           padding: 1,

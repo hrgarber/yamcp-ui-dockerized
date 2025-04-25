@@ -7,7 +7,7 @@ import { runCommand } from "./cli/run";
 import { logCommand } from "./cli/log/log";
 const program = new Command();
 
-program.name("mcpx").description("MCP Gateway CLI").version("1.0.0");
+program.name("yamcp").description("MCP Gateway CLI").version("1.0.0");
 program.showHelpAfterError("(add --help for additional information)");
 // Add server commands
 serverCommands(program);

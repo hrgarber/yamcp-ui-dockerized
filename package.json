@@ -1,10 +1,14 @@
 {
-  "name": "@mcpspace/mcpx",
-  "version": "1.1.0",
-  "description": "",
+  "name": "yamcp",
+  "version": "0.1.0",
+  "description": "Organize and manage your MCP servers in YAM (Yet Another MCP) workspaces - create dedicated workspaces for Research, Coding, Data Analysis, and more",
   "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hamidra/yamcp"
+  },
   "bin": {
-    "mcpx": "dist/index.js"
+    "yamcp": "dist/index.js"
   },
   "scripts": {
     "dev": "tsc --watch",
@@ -22,6 +26,7 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@modelcontextprotocol/inspector": "^0.10.2",
     "@types/node": "^20.17.30",
     "@types/prompts": "^2.4.9",
     "@types/treeify": "^1.0.3",

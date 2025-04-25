@@ -1,11 +1,11 @@
 import path from "path";
 import envPaths from "env-paths";
 
-const paths = envPaths("mcpx");
+const paths = envPaths("yamcp");
 
 // Server
-export const SERVER_NAME = "tesser_mcp_gateway";
-export const SERVER_VERSION = "1.0.0";
+export const SERVER_NAME = "yamcp_gateway";
+export const SERVER_VERSION = "0.1.0";
 
 // Store
 const storeDir = paths.data;
