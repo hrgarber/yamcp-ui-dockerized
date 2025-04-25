@@ -9,8 +9,8 @@ MCPX is a command-line tool for organizing and managing MCP Servers as local wor
 npm install -g @mcpspace/mcpx  # or use npx @mcpspace/mcpx
 
 # Import servers (choose one)
-mcpx server import  <config.json>  # import servers from config file (https://example.com)
-mcpx server add                  # or add manuall
+mcpx server import [config]    # import servers from config file (https://example.com)
+mcpx server add         # or add manuall
 
 # create workspace
 mcpx ws create
@@ -78,18 +78,18 @@ Displays all configured servers with their details and allows you to:
 ### ❌ Remove a server
 
 ```bash
-mcpx server remove <name>
+mcpx server remove [name]
 ```
 
-Removes a server configuration by its name, with confirmation prompt.
+Removes a server configuration by its name, with confirmation prompt. If no name is provided, you'll be prompted to select a server to remove.
 
 ### ⚙️ Import servers from config file
 
 ```bash
-mcpx server import <config-file>
+mcpx server import [config]
 ```
 
-Bulk imports server configurations from a JSON file.
+Bulk imports server configurations from a JSON file. If no config file is provided and a default configuration exists, you'll be prompted to use it.
 
 ---
 
@@ -130,10 +130,11 @@ Interactive flow to:
 ### ❌ Delete a workspace
 
 ```bash
-mcpx ws delete <workspace-name>
+mcpx ws delete [workspace-name]
 ```
 
 Deletes a workspace configuration, with confirmation prompt.
+If no workspace name is provided, you'll be prompted to select from existing workspaces.
 
 ### 🚀 Run the gateway
 
@@ -159,14 +160,14 @@ Access server communication logs stored in the consolidated log store.
 | ---------------- | ---------------------------------- | ---------------------------------- |
 | `server add`     | Add a new MCP server interactively | `mcpx server add`                  |
 | `server list`    | List all configured servers        | `mcpx server list`                 |
-| `server remove`  | Remove a server by name            | `mcpx server remove my-server`     |
-| `server import`  | Import servers from config file    | `mcpx server import config.json`   |
+| `server remove`  | Remove a server by name            | `mcpx server remove [name]`        |
+| `server import`  | Import servers from config file    | `mcpx server import [config]`      |
 | `ws create`      | Create a new workspace             | `mcpx ws create`                   |
 | `ws list`        | List all workspaces                | `mcpx ws list`                     |
 | `ws list --name` | Show specific workspace details    | `mcpx ws list --name my-workspace` |
 | `ws edit`        | Edit workspace configuration       | `mcpx ws edit`                     |
-| `ws delete`      | Delete a workspace                 | `mcpx ws delete my-workspace`      |
-| `run`            | Start gateway with workspace       | `mcpx run my-workspace`            |
+| `ws delete`      | Delete a workspace                 | `mcpx ws delete [workspace-name]`  |
+| `run`            | Start gateway with workspace       | `mcpx run <workspace-name>`        |
 | `log`            | View server logs                   | `mcpx log`                         |
 
 ---
