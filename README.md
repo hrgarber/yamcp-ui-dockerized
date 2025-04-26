@@ -20,8 +20,8 @@ yamcp run <yam-workspace-name>
 ```
 
 <div align="center">
-<img src="demo-gifs/yamcp.gif" alt="yamcp demo" style="width:60%; height:auto;"/>
-<img src="demo-gifs/cursor.gif" alt="cursor demo" style="width:60%; height:auto;"/>
+<img src="demo-gifs/yamcp.gif" alt="yamcp demoo" width="700px"/>
+<img src="demo-gifs/cursor.gif" alt="cursor demo" width="700px"/>
 </div>
 
 ## 🔑 Key Concepts
