@@ -9,7 +9,7 @@ YAMCP (pronounced Yam-See-Pee) is a command-line tool for organizing and managin
 npm install -g yamcp  # or use npx yamcp
 
 # Import servers (choose one)
-yamcp server import [config]    # import servers from config file (https://example.com)
+yamcp server import [config]    # import servers from config file (see src/example-servers.json for format)
 yamcp server add                # or add manually
 
 # create workspaces (e.g. a yam for coding, design, data, ...)
