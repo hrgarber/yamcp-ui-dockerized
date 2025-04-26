@@ -19,8 +19,13 @@ yamcp yam create
 yamcp run <yam-workspace-name>
 ```
 
+## Import and Create Workspaces
 <div align="center">
 <img src="demo-gifs/yamcp.gif" alt="yamcp demoo" width="700px"/>
+</div>
+
+## Add All Bundled Servers in a Workspace to Your AI Apps
+<div align="center">
 <img src="demo-gifs/cursor.gif" alt="cursor demo" width="700px"/>
 </div>
 
