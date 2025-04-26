@@ -1,6 +1,6 @@
-# YAMCP - A Model Context Workspace Manager
+# 🍠 YAMCP - A Model Context Workspace Manager
 
-YAMCP is a command-line tool for organizing and managing MCP Servers as local workspaces. It enables seamless connection to multiple MCP servers (both local and remote) and bundles them into workspaces for use in AI Apps. All server communications are tracked in a consolidated log store for easy monitoring and debugging.
+YAMCP is a command-line tool for organizing and managing MCP servers as local workspaces. It seamlessly connects to multiple MCP servers, local or remote, groupting them into a unified workspace exposed as a Yet Another MCP server (YAM) for AI applications (e.g. dedicated yam workspaces for coding, design, research, ...). Additionally, it simplifies monitoring and debugging by centralizing logs of all server communications in a centralized log store.
 
 ## 🚀 Quick Start
 
