@@ -1,18 +1,18 @@
-# MCPX - A Model Context Workspace Manager
+# YAMCP - A Model Context Workspace Manager
 
-MCPX is a command-line tool for organizing and managing MCP Servers as local workspaces. It enables seamless connection to multiple MCP servers (both local and remote) and bundles them into workspaces for use in AI Apps. All server communications are tracked in a consolidated log store for easy monitoring and debugging.
+YAMCP is a command-line tool for organizing and managing MCP Servers as local workspaces. It enables seamless connection to multiple MCP servers (both local and remote) and bundles them into workspaces for use in AI Apps. All server communications are tracked in a consolidated log store for easy monitoring and debugging.
 
 ## 🚀 Quick Start
 
 ```bash
-# Install MCPX
+# Install YAMCP
 npm install -g yamcp  # or use npx yamcp
 
 # Import servers (choose one)
 yamcp server import [config]    # import servers from config file (https://example.com)
-yamcp server add         # or add manuall
+yamcp server add                # or add manually
 
-# create workspace
+# create workspaces (e.g. a yam for coding, design, data, ...)
 yamcp yam create
 
 # Run workspace in your AI app
@@ -25,13 +25,13 @@ yamcp run <yam-workspace-name>
 - **Workspaces (YAMs)**: Collections of MCP servers grouped together to be shared with AI Apps (e.g. a workspace for coding, writing, design, magic making!)
 - **Gateway**: A local MCP server that manages connections to configured MCP servers in a workspace and exposes them through a unified server to AI App's MCP clients
 
-With MCPX, you can:
+With YAMCP, you can:
 
-- Manage multiple MCP server connections as a unified server
-- Create workspaces to organize servers for different projects
-- Start a gateway server to interact with your bundled MCP servers in a workspace
-- Monitor server communications through consolidated logging
-- Configure and modify workspace settings easily
+- Create workspaces to group MCP servers by AI application (e.g. Cursor, Claude, GitHub Copilot)
+- Group servers by workflow purpose (e.g. software development, data science, technical writing)
+- Connect AI apps to a single gateway that provides access to all workspace servers
+- Manage and monitor multiple MCP server connections through a unified interface
+- Track all server communications with detailed logging and debugging capabilities
 
 ## Top-Level Commands
 
@@ -150,7 +150,7 @@ graph TB
     class STORE,PROVIDERS,WORKSPACES store
 ```
 
-The diagram shows the main components of the MCPX system:
+The diagram shows the main components of the YAMCP system:
 
 - **CLI Commands**: User interface for managing servers and workspaces
 - **McpGateway**: Core component that coordinates the Gateway Server and Router
