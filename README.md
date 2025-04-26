@@ -19,6 +19,11 @@ yamcp yam create
 yamcp run <yam-workspace-name>
 ```
 
+![yamcp demo](https://github.com/user-attachments/assets/c56e4d4d-5721-4f06-9107-57a482758237)
+
+
+![Cursor demo](https://github.com/user-attachments/assets/623668af-72d6-44e7-af7f-40fc3d86756e)
+
 ## 🔑 Key Concepts
 
 - **MCP Servers**: Remote or local servers that provide Model Context Protocol services
