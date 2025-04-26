@@ -18,9 +18,10 @@ yamcp yam create
 # Run workspace in your AI app
 yamcp run <yam-workspace-name>
 ```
+
 <div align="center">
-<img src="https://github.com/user-attachments/assets/c56e4d4d-5721-4f06-9107-57a482758237" alt="yamcp demo" style="width:60%; height:auto;"/>
-<img src="https://github.com/user-attachments/assets/623668af-72d6-44e7-af7f-40fc3d86756e" alt="cursor demo" style="width:60%; height:auto;"/>
+<img src="demo-gifs/yamcp.gif" alt="yamcp demo" style="width:60%; height:auto;"/>
+<img src="demo-gifs/cursor.gif" alt="cursor demo" style="width:60%; height:auto;"/>
 </div>
 
 ## 🔑 Key Concepts
