@@ -20,13 +20,15 @@ yamcp run <yam-workspace-name>
 ```
 
 ## Import and Create Workspaces
+
 <div align="center">
-<img src="demo-gifs/yamcp.gif" alt="yamcp demoo" width="700px"/>
+<img src="assets/demo/yamcp.gif" alt="yamcp demoo" width="700px"/>
 </div>
 
 ## Connect All Bundled Servers in a Workspace to Your AI Apps with One Config
+
 <div align="center">
-<img src="demo-gifs/cursor.gif" alt="cursor demo" width="700px"/>
+<img src="assets/demo/cursor.gif" alt="cursor demo" width="700px"/>
 </div>
 
 ## 🔑 Key Concepts
