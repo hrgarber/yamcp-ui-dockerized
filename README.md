@@ -24,7 +24,7 @@ yamcp run <yam-workspace-name>
 <img src="demo-gifs/yamcp.gif" alt="yamcp demoo" width="700px"/>
 </div>
 
-## Add All Bundled Servers in a Workspace to Your AI Apps
+## Connect All Bundled Servers in a Workspace to Your AI Apps with One Config
 <div align="center">
 <img src="demo-gifs/cursor.gif" alt="cursor demo" width="700px"/>
 </div>
