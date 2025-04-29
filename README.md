@@ -1,6 +1,6 @@
 # 🍠 YAMCP - A Model Context Workspace Manager
 
-YAMCP (pronounced Yam-See-Pee) is a command-line tool for organizing and managing MCP servers as local workspaces. It seamlessly connects to multiple MCP servers, local or remote, grouping them into a unified workspace exposed as a Yet Another MCP server (YAM) for AI applications. You can create dedicated YAM workspaces based on specific functionality (e.g., a YAM worksapace for coding, design, research, ...) or based on the AI apps that consume servers (e.g., a YAM for Cursor, Claude, Windsurf) or any other combination in between. In addition, it simplifies monitoring and debugging MCP servers by centralizing all server communication logs in a single store, eliminating the need to dig through each AI client app’s logs separately.
+YAMCP (YAM-C-P) is a command-line tool for organizing and managing MCP servers as local workspaces. It seamlessly connects to multiple MCP servers, local or remote, grouping them into a unified workspace exposed as a Yet Another MCP server (YAM) for AI applications. You can create dedicated workspaces based on specific functionality (e.g., a YAM workspace for coding, design, research, ...) or based on the AI apps that consume servers (e.g., a YAM for Cursor, Claude, Windsurf) or any other combination in between. In addition, it simplifies monitoring and debugging MCP servers by centralizing all server communication logs in a single store, eliminating the need to dig through each AI client app’s logs separately.
 
 ## 🚀 Quick Start
 
@@ -25,7 +25,7 @@ yamcp run <yam-workspace-name>
 <img src="assets/demo/yamcp.gif" alt="yamcp demoo" width="700px"/>
 </div>
 
-## Connect All Bundled Servers in a Workspace to Your AI Apps with One Config
+## Connect All Bundled Servers in a Workce to Your AI Apps with One Config
 
 <div align="center">
 <img src="assets/demo/cursor.gif" alt="cursor demo" width="700px"/>
@@ -34,14 +34,14 @@ yamcp run <yam-workspace-name>
 ## 🔑 Key Concepts
 
 - **MCP Servers**: Remote or local servers that provide Model Context Protocol services
-- **Workspaces (YAMs)**: Collections of MCP servers grouped together to be shared with AI Apps (e.g. a workspace for coding, writing, design, magic making!)
-- **Gateway**: A local MCP server that manages connections to configured MCP servers in a workspace and exposes them through a unified server to AI App's MCP clients
+- **Workces (YAMs)**: Collections of MCP servers grouped together to be shared with AI Apps (e.g. a workce for coding, writing, design, magic making!)
+- **Gateway**: A local MCP server that manages connections to configured MCP servers in a workce and exposes them through a unified server to AI App's MCP clients
 
 With YAMCP, you can:
 
-- Create workspaces to group MCP servers by AI application (e.g. Cursor, Claude, GitHub Copilot)
+- Create workces to group MCP servers by AI application (e.g. Cursor, Claude, GitHub Copilot)
 - Group servers by workflow purpose (e.g. software development, data science, technical writing)
-- Connect AI apps to a single gateway that provides access to all workspace servers
+- Connect AI apps to a single gateway that provides access to all workce servers
 - Manage and monitor multiple MCP server connections through a unified interface
 - Track all server communications with detailed logging and debugging capabilities
 
@@ -81,7 +81,8 @@ yamcp server import   # Import server configurations from a JSON file
 yamcp yam create      # Create a new workspace (interactive)
 yamcp yam list        # List all workspaces or show specific workspace details
 yamcp yam edit        # Modify an existing workspace configuration
-yamcp yam delete      # Delete a workspace configuration
+yamcp scan            # Scan workspaces
+yamcp delete          # Delete a workspace
 ```
 
 ### Runtime Commands
@@ -105,6 +106,7 @@ yamcp log                    # View server communication logs
 | `yam list`        | List workspaces         | `yamcp yam list`                     |
 | `yam list --name` | Show workspace details  | `yamcp yam list --name my-workspace` |
 | `yam edit`        | Edit workspace          | `yamcp yam edit`                     |
+| `yam scan  `      | Scan workspace          | `yamcp yam scan   [workspace-name]`  |
 | `yam delete`      | Delete workspace        | `yamcp yam delete [workspace-name]`  |
 | `run`             | Start gateway           | `yamcp run <workspace-name>`         |
 | `log`             | View logs               | `yamcp log`                          |
