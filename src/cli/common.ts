@@ -12,7 +12,23 @@ import {
 import prompts from "prompts";
 import treeify from "treeify";
 
-export function parseProviderParameters(
+/**
+ * Common CLI utilities and helpers for provider management, workspace handling, and user prompts.
+ *
+ * This module includes functions for parsing provider parameters, building provider trees,
+ * displaying workspace choices, scanning providers, and printing scan results.
+ * It is used throughout the CLI to facilitate user interaction and provider configuration.
+ */
+
+/**
+ * Parses provider parameters and constructs a McpProvider object.
+ *
+ * @param name - The namespace or name of the provider.
+ * @param options - Options containing either a command (with optional env) or a url.
+ * @returns A McpProvider object configured with the given parameters.
+ * @throws If neither command nor url is provided, or if command is missing.
+ */
+function parseProviderParameters(
   name: string,
   options: { command?: string; env?: string[]; url?: string }
 ): McpProvider {
@@ -58,7 +74,13 @@ export function parseProviderParameters(
   throw new Error("Either command or url must be provided");
 }
 
-export function buildProviderTree(provider: McpProvider): TreeNode {
+/**
+ * Builds a tree representation of a provider for display purposes.
+ *
+ * @param provider - The McpProvider to represent as a tree.
+ * @returns A TreeNode representing the provider's configuration.
+ */
+function buildProviderTree(provider: McpProvider): TreeNode {
   let subtree: TreeNode = {};
   if (isStdioConfig(provider)) {
     subtree = {
@@ -90,8 +112,13 @@ export function buildProviderTree(provider: McpProvider): TreeNode {
   return tree;
 }
 
-// Create provider selection options
-export function buildProviderOptions(providers: McpProvider[]) {
+/**
+ * Builds a list of provider options suitable for selection prompts.
+ *
+ * @param providers - Array of McpProvider objects.
+ * @returns An array of prompt option objects with title, value, and description.
+ */
+function buildProviderOptions(providers: McpProvider[]) {
   return providers.map((provider) => {
     const tree = buildProviderTree(provider);
     return {
@@ -102,7 +129,15 @@ export function buildProviderOptions(providers: McpProvider[]) {
   });
 }
 
-export function getWorkspaceProviders(
+/**
+ * Retrieves providers from a record based on a workspace list, logging errors if not found.
+ *
+ * @param providers - Record of provider name to McpProvider.
+ * @param workspace - Array of provider names (namespaces) in the workspace.
+ * @param logger - Optional logger for error output.
+ * @returns An array of found McpProvider objects (missing ones are filtered out).
+ */
+function getWorkspaceProviders(
   providers: Record<string, McpProvider>,
   workspace: Namespace[],
   logger?: Logger
@@ -121,11 +156,23 @@ export function getWorkspaceProviders(
   return workspaceProviders.filter((provider) => provider);
 }
 
-export function returnAndExit(code: number) {
+/**
+ * Exits the process with the given exit code.
+ *
+ * @param code - The exit code to use.
+ */
+function returnAndExit(code: number) {
   process.exit(code);
 }
 
-export async function scanProviderAndConfirm(
+/**
+ * Scans a provider and prompts the user to confirm adding it if the scan fails.
+ *
+ * @param mcpProvider - The provider to scan.
+ * @param initial - Whether this is the initial scan (affects prompt default).
+ * @returns True if the provider should be added, false otherwise.
+ */
+async function scanProviderAndConfirm(
   mcpProvider: McpProvider,
   initial: boolean = false
 ) {
@@ -153,7 +200,12 @@ export async function scanProviderAndConfirm(
   return true;
 }
 
-export function printScanResult(scanResult: ScanResult) {
+/**
+ * Prints the scan result in a tree format, showing tools, prompts, and resources.
+ *
+ * @param scanResult - The ScanResult object to display.
+ */
+function printScanResult(scanResult: ScanResult) {
   type CapabilityTree = {
     [key: string]: string | CapabilityTree;
   };
@@ -198,7 +250,13 @@ export function printScanResult(scanResult: ScanResult) {
   }
 }
 
-export function buildWorkspaceTree(
+/**
+ * Builds a tree structure representing workspaces and their providers.
+ *
+ * @param workspaces - Record mapping workspace names to arrays of provider names.
+ * @returns A nested object tree suitable for display.
+ */
+function buildWorkspaceTree(
   workspaces: Record<string, string[]>
 ): Record<string, Record<string, string>> {
   // Create tree structure for workspaces
@@ -212,7 +270,14 @@ export function buildWorkspaceTree(
   return workspaceTree;
 }
 
-export async function displayWorkspacesChoice(
+/**
+ * Displays a prompt for the user to select a workspace, with an option to exit.
+ *
+ * @param workspaces - Record mapping workspace names to arrays of provider names.
+ * @param promptMessage - Optional custom prompt message.
+ * @returns The selected workspace name, or undefined if exited.
+ */
+async function displayWorkspacesChoice(
   workspaces: Record<string, string[]>,
   promptMessage: string = "Select a workspace to view details (use arrow keys)"
 ) {
@@ -252,3 +317,15 @@ export async function displayWorkspacesChoice(
     return response.workspace;
   }
 }
+
+export {
+  parseProviderParameters,
+  buildProviderTree,
+  buildProviderOptions,
+  getWorkspaceProviders,
+  returnAndExit,
+  scanProviderAndConfirm,
+  printScanResult,
+  buildWorkspaceTree,
+  displayWorkspacesChoice,
+};
