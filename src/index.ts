@@ -3,7 +3,7 @@
 import { Command } from "commander";
 import { serverCommands } from "./cli/server/server";
 import { workspaceCommands } from "./cli/workspace/workspace";
-import { runCommand } from "./cli/run";
+import { runCommand } from "./cli/run/run";
 import { logCommand } from "./cli/log/log";
 const program = new Command();
 

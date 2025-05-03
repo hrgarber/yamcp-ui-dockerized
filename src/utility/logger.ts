@@ -2,6 +2,8 @@ import winston from "winston";
 import path, { resolve } from "path";
 import fs from "fs";
 import { LOG_DIR } from "../config";
+import { v4 as uuidv4 } from "uuid";
+
 // Update the LogMessage interface to match MCP server's format
 interface LogMessage {
   level:
@@ -64,7 +66,7 @@ const formatError = (
   };
 };
 
-export class Logger {
+class Logger {
   private ended = false;
   private logger: winston.Logger;
   constructor(namespace: string) {
@@ -118,4 +120,10 @@ export class Logger {
   }
 }
 
+function getLogNamespace(workspaceName: string) {
+  const randomString = uuidv4().replace(/-/g, "").substring(0, 8);
+  return `${workspaceName}_${randomString}`;
+}
+
+export { Logger, getLogNamespace };
 export type { LogMessage };

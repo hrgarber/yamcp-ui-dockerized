@@ -1,17 +1,11 @@
-import { Command } from "commander";
-import { GatewayServer } from "../gatewayServer";
-import { GatewayRouter } from "../gatewayRouter";
-import { McpGateway } from "../gateway";
-import { Logger } from "../utility/logger";
-import { loadProvidersMap, loadWorkspaceMap } from "../store/loader";
-import { getWorkspaceProviders } from "./common";
-import { v4 as uuidv4 } from "uuid";
-function getLogNamespace(workspaceName: string) {
-  const randomString = uuidv4().replace(/-/g, "").substring(0, 8);
-  return `${workspaceName}_${randomString}`;
-}
+import { GatewayServer } from "../../../gatewayServer";
+import { GatewayRouter } from "../../../gatewayRouter";
+import { McpGateway } from "../../../gateway";
+import { Logger, getLogNamespace } from "../../../utility/logger";
+import { loadProvidersMap, loadWorkspaceMap } from "../../../store/loader";
+import { getWorkspaceProviders } from "../../common";
 
-async function runGateway(workspaceName: string) {
+export async function runGatewayAction(workspaceName: string) {
   let logger: Logger | undefined;
   // create a logger with a unique namespace for this run
   try {
@@ -65,14 +59,4 @@ async function runGateway(workspaceName: string) {
     logger?.error(error);
     await logger?.flushLogs();
   }
-}
-
-export function runCommand(program: Command) {
-  program
-    .command("run")
-    .description("Run the gateway with a given workspace")
-    .argument("<workspace-name>", "name of the workspace to run")
-    .action((name) => {
-      runGateway(name);
-    });
 }
