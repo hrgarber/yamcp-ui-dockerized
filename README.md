@@ -81,8 +81,8 @@ yamcp server import   # Import server configurations from a JSON file
 yamcp yam create      # Create a new workspace (interactive)
 yamcp yam list        # List all workspaces or show specific workspace details
 yamcp yam edit        # Modify an existing workspace configuration
-yamcp scan            # Scan workspaces
-yamcp delete          # Delete a workspace
+yamcp yam scan            # Scan workspaces
+yamcp yam delete          # Delete a workspace
 ```
 
 ### Runtime Commands
