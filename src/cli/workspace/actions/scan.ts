@@ -3,13 +3,16 @@ import {
   getWorkspaceProviders,
   printScanResult,
   returnAndExit,
-} from "../../common";
-import { scanProvider } from "../../../providerScanner";
-import { getScanFailures } from "../../../providerScanner";
-import { isScanSuccessful } from "../../../providerScanner";
+} from "../../common/utils";
+import {
+  scanProvider,
+  getScanFailures,
+  isScanSuccessful,
+} from "../../../providerScanner";
 import chalk from "chalk";
 import { loadProvidersMap } from "../../../store/loader";
 import { getWorkspaces } from "../../../store/workspace";
+
 export async function scanWorkspacesAction() {
   const workspaces = getWorkspaces();
   const availableProviders = loadProvidersMap();

@@ -5,7 +5,7 @@ import {
 } from "../../../store/provider";
 import prompts, { type PromptType } from "prompts";
 import chalk from "chalk";
-import { buildProviderOptions, returnAndExit } from "../../common";
+import { buildProviderOptions, returnAndExit } from "../../common/utils";
 
 function removeConfirmationPrompt(name: string) {
   return {
@@ -39,7 +39,11 @@ export async function removeProvidersAction(name?: string) {
   }
 
   // Create provider selection options
-  const providerOptions = buildProviderOptions(Object.values(providers));
+  const description = "Select a server to remove";
+  const providerOptions = buildProviderOptions(
+    Object.values(providers),
+    description
+  );
   const allProvidersOption = {
     title: "All servers",
     value: "all",

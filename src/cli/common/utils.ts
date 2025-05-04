@@ -1,14 +1,14 @@
-import type { TreeNode } from "./types";
-import type { Logger } from "../utility/logger";
-import { Namespace } from "../utility/namespace";
+import type { TreeNode } from "../types";
+import type { Logger } from "../../utility/logger";
+import { Namespace } from "../../utility/namespace";
 import chalk from "chalk";
-import { McpProvider, isStdioConfig, isSSEConfig } from "../store/schema";
+import { McpProvider, isStdioConfig, isSSEConfig } from "../../store/schema";
 import {
   scanProvider,
   isScanSuccessful,
   getScanFailures,
   ScanResult,
-} from "../providerScanner";
+} from "../../providerScanner";
 import prompts from "prompts";
 import treeify from "treeify";
 
@@ -116,15 +116,31 @@ function buildProviderTree(provider: McpProvider): TreeNode {
  * Builds a list of provider options suitable for selection prompts.
  *
  * @param providers - Array of McpProvider objects.
- * @returns An array of prompt option objects with title, value, and description.
+ * @returns An array of prompt option objects with provider details in a tree format in the description.
  */
-function buildProviderOptions(providers: McpProvider[]) {
+function buildDetailedProviderOptions(providers: McpProvider[]) {
   return providers.map((provider) => {
     const tree = buildProviderTree(provider);
     return {
       title: `- ${provider.namespace} (${provider.type})`,
       value: provider,
       description: `${treeify.asTree(tree, true, true)}`,
+    };
+  });
+}
+
+/**
+ * Builds a list of provider options suitable for selection prompts.
+ *
+ * @param providers - Array of McpProvider objects.
+ * @returns An array of prompt option objects with title, value, and description.
+ */
+function buildProviderOptions(providers: McpProvider[], description: string) {
+  return providers.map((provider) => {
+    return {
+      title: `- ${provider.namespace} (${provider.type})`,
+      value: provider,
+      description,
     };
   });
 }
@@ -318,9 +334,19 @@ async function displayWorkspacesChoice(
   }
 }
 
+function groupProvidersByType(providers: McpProvider[]) {
+  return providers.reduce((acc, provider) => {
+    const key = provider.type.toUpperCase();
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(provider);
+    return acc;
+  }, {} as Record<string, typeof providers>);
+}
+
 export {
   parseProviderParameters,
   buildProviderTree,
+  buildDetailedProviderOptions,
   buildProviderOptions,
   getWorkspaceProviders,
   returnAndExit,
@@ -328,4 +354,5 @@ export {
   printScanResult,
   buildWorkspaceTree,
   displayWorkspacesChoice,
+  groupProvidersByType,
 };

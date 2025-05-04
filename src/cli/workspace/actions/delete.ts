@@ -1,7 +1,7 @@
 import prompts, { type PromptType } from "prompts";
 import { getWorkspaces, removeWorkspace } from "../../../store/workspace";
-import { displayWorkspacesChoice } from "../../common";
-import { returnAndExit } from "../../common";
+import { displayWorkspacesChoice } from "../../common/utils";
+import { returnAndExit } from "../../common/utils";
 import chalk from "chalk";
 
 function deleteConfirmationPrompt(name: string) {

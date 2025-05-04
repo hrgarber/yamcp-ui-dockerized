@@ -3,7 +3,7 @@ import { addProviderAction } from "./actions/add";
 import { listProvidersAction } from "./actions/list";
 import { removeProvidersAction } from "./actions/remove";
 import { importProvidersAction } from "./actions/import";
-
+import { scanProvidersAction } from "./actions/scan";
 export function serverCommands(program: Command) {
   const server = program.command("server").description("Manage MCP providers");
 
@@ -18,7 +18,7 @@ export function serverCommands(program: Command) {
   server
     .command("list")
     .description("List all MCP servers")
-    .action(() => {
+    .action(async () => {
       console.clear();
       listProvidersAction();
     });
@@ -39,6 +39,14 @@ export function serverCommands(program: Command) {
     .action(async (config) => {
       console.clear();
       importProvidersAction(config);
+    });
+
+  server
+    .command("scan")
+    .description("Scan the server's capabilities")
+    .action(async () => {
+      console.clear();
+      scanProvidersAction();
     });
 
   return server;

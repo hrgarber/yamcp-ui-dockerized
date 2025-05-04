@@ -5,7 +5,7 @@ import {
   buildProviderOptions,
   printScanResult,
   returnAndExit,
-} from "../../common";
+} from "../../common/utils";
 
 import {
   getScanFailures,
@@ -30,7 +30,8 @@ export async function listProvidersAction() {
   }
 
   // Create provider selection options
-  const providerOptions = buildProviderOptions(providers);
+  const description = "Select to list the server's capabilities";
+  const providerOptions = buildProviderOptions(providers, description);
 
   // Handle CTRL+C gracefully
   const onCancel = () => {

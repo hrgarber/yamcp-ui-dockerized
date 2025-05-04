@@ -2,9 +2,9 @@ import prompts from "prompts";
 import { existsSync } from "fs";
 import { EXAMPLE_SERVERS_CONFIG_PATH } from "../../../config";
 import chalk from "chalk";
-import { returnAndExit } from "../../common";
+import { returnAndExit } from "../../common/utils";
 import { loadProviderConfigFile } from "../../../store/loader";
-import { scanProviderAndConfirm } from "../../common";
+import { scanProviderAndConfirm } from "../../common/utils";
 import { addMcpProviders } from "../../../store/provider";
 
 export async function importProvidersAction(config: string) {

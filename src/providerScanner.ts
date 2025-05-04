@@ -67,7 +67,7 @@ function transformCapabilities(capabilities: any): Capabilities {
 
 export async function scanProvider(provider: McpProvider): Promise<ScanResult> {
   const result = createInitialScanResult();
-
+  let client;
   try {
     // Step 1: Create transport
     let transport;
@@ -81,7 +81,7 @@ export async function scanProvider(provider: McpProvider): Promise<ScanResult> {
     }
 
     // Step 2: Test connection and get client
-    let client;
+
     try {
       client = await connectProviderClient(transport);
       // At this point, we know that the connection is successful since the transport was created and connected
@@ -144,7 +144,9 @@ export async function scanProvider(provider: McpProvider): Promise<ScanResult> {
       error instanceof Error ? error.message : String(error)
     }`;
   }
-
+  if (client) {
+    client.close();
+  }
   return result;
 }
 

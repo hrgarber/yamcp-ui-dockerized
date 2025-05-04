@@ -6,7 +6,7 @@ import {
   parseProviderParameters,
   returnAndExit,
   scanProviderAndConfirm,
-} from "../../common";
+} from "../../common/utils";
 
 export async function addProviderAction() {
   const providerType = await prompts({

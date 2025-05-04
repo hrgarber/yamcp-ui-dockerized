@@ -3,7 +3,7 @@ import { GatewayRouter } from "../../../gatewayRouter";
 import { McpGateway } from "../../../gateway";
 import { Logger, getLogNamespace } from "../../../utility/logger";
 import { loadProvidersMap, loadWorkspaceMap } from "../../../store/loader";
-import { getWorkspaceProviders } from "../../common";
+import { getWorkspaceProviders } from "../../common/utils";
 
 export async function runGatewayAction(workspaceName: string) {
   let logger: Logger | undefined;

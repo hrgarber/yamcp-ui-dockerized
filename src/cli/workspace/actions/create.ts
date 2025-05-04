@@ -5,7 +5,7 @@ import boxen from "boxen";
 
 import { addWorkspace } from "../../../store/workspace";
 import { loadProvidersMap } from "../../../store/loader";
-
+import { selectServersPrompt } from "../../common/prompts";
 export async function createWorkspaceAction() {
   const providers = Object.values(loadProvidersMap());
 
@@ -51,60 +51,11 @@ export async function createWorkspaceAction() {
     { onCancel }
   );
 
-  // Group servers by type for better organization
-  const providersByType = providers.reduce((acc, provider) => {
-    const key = provider.type.toUpperCase();
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(provider);
-    return acc;
-  }, {} as Record<string, typeof providers>);
-
-  // Create options for the multiselect prompt
-  const serverOptions = Object.entries(providersByType).flatMap(
-    ([type, providers]) => [
-      {
-        title: chalk.yellow(`---- ${type} MCP Servers ----`),
-        value: `group_${type}`,
-        group: type,
-        description: `Select/deselect all ${type} servers`,
-      },
-      ...providers.map((provider) => ({
-        title: `${provider.namespace}`,
-        value: provider.namespace,
-        description: `Select/deselect ${provider.namespace}`,
-        group: type,
-      })),
-    ]
-  );
-
-  // Select servers
-  const serversResponse = await prompts(
-    {
-      type: "multiselect",
-      name: "selectedServers",
-      message: "Select servers to include:",
-      choices: serverOptions,
-      min: 1,
-      instructions: false,
-      hint: "- Space to select. Return to submit",
-    },
-    { onCancel }
-  );
-
-  // check if all groups are selected and
-  const selections = serversResponse.selectedServers as string[];
-  const expandedSelections = selections.reduce((acc, selection) => {
-    if (selection.startsWith("group_")) {
-      const type = selection.replace("group_", "");
-      const providers = providersByType[type]?.map((p) => p.namespace) || [];
-      return [...acc, ...providers];
-    }
-    return [...acc, selection];
-  }, [] as string[]);
-  // deduplicate selections
-  const finalSelection = [...new Set(expandedSelections)];
+  console.clear();
+  const finalSelection = await selectServersPrompt(providers, onCancel);
 
   // Confirmation prompt
+  console.clear();
   const confirmResponse = await prompts(
     {
       type: "confirm",
@@ -120,13 +71,13 @@ export async function createWorkspaceAction() {
     return;
   }
 
-  // Show progress spinner
-  const spinner = ora("Creating workspace...").start();
-
   // Show which servers were selected
   const selectedServerObjects = providers.filter((s) =>
     finalSelection.includes(s.namespace)
   );
+
+  // Show progress spinner
+  const spinner = ora("Creating workspace...").start();
 
   const selectedServerNames = selectedServerObjects.map((s) => s.namespace);
 

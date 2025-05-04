@@ -7,7 +7,7 @@ import {
   displayWorkspacesChoice,
   getWorkspaceProviders,
   returnAndExit,
-} from "../../common";
+} from "../../common/utils";
 import { McpProvider } from "../../../store/schema";
 import { WORKSPACES_CONFIG_PATH } from "../../../config";
 import { loadProvidersMap } from "../../../store/loader";
