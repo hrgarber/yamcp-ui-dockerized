@@ -8,7 +8,7 @@ YAMCP (YAM-C-P) is a command-line tool for organizing and managing MCP servers a
 <img src="assets/demo/yamcp.gif" alt="yamcp demoo" width="700px"/>
 </div>
 
-## Connect All Bundled Servers in a Workce to Your AI Apps with One Config
+## Connect All Bundled Servers in a Workspace to Your AI Apps with One Config
 
 <div align="center">
 <img src="assets/demo/cursor.gif" alt="cursor demo" width="700px"/>
