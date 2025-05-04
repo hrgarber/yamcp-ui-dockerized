@@ -1,8 +1,10 @@
 import chalk from "chalk";
-import prompts from "prompts";
+import prompts, { PromptType } from "prompts";
+import treeify from "treeify";
 import { getMcpProviders } from "../../../store/provider";
 import {
   buildProviderOptions,
+  buildProviderTree,
   printScanResult,
   returnAndExit,
 } from "../../common/utils";
@@ -44,7 +46,7 @@ export async function listProvidersAction() {
     {
       type: "select",
       name: "selectedProvider",
-      message: "Select a server to scan their capabilities:",
+      message: "Select a server to see their details:",
       choices: providerOptions,
       hint: "Use arrow keys to navigate, Enter to select, Esc or Ctrl+C to exit",
     },
@@ -53,18 +55,35 @@ export async function listProvidersAction() {
 
   if (response.selectedProvider) {
     const mcpProvider = response.selectedProvider;
-    const scanResult = await scanProvider(mcpProvider);
-    printScanResult(scanResult);
-    if (!isScanSuccessful(scanResult)) {
+    // confirm the scan
+    const providerDetails = buildProviderTree(mcpProvider);
+    console.log(chalk.bold("\nProvider Details:"));
+    console.log(chalk.dim("----------------------"));
+    console.log(`${treeify.asTree(providerDetails, true, true)}`);
+
+    const { scanConfirmed } = await prompts({
+      type: "confirm" as PromptType,
+      name: "scanConfirmed",
+      message: `Do you want to scan the capabilities of "${mcpProvider.namespace}"?`,
+      initial: false,
+    });
+
+    if (scanConfirmed) {
+      const scanResult = await scanProvider(mcpProvider);
+      printScanResult(scanResult);
+      if (!isScanSuccessful(scanResult)) {
+        console.log(
+          chalk.red(`✘ Mcp server "${mcpProvider.namespace}" scan failed`)
+        );
+        console.log(chalk.red(getScanFailures(scanResult).join("\n")));
+        returnAndExit(1);
+      }
       console.log(
-        chalk.red(`✘ Mcp server "${mcpProvider.namespace}" scan failed`)
+        chalk.green(
+          `✔ Mcp server "${mcpProvider.namespace}" scan was sucessfull`
+        )
       );
-      console.log(chalk.red(getScanFailures(scanResult).join("\n")));
-      returnAndExit(1);
     }
-    console.log(
-      chalk.green(`✔ Mcp server "${mcpProvider.namespace}" scan was sucessfull`)
-    );
     returnAndExit(0);
   }
 }
