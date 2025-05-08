@@ -2,7 +2,7 @@ import { Client as McpClient } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { SERVER_NAME, SERVER_VERSION } from "./config";
-import { McpProvider, ProviderParameters } from "./store/schema";
+import { McpProvider } from "./store/schema";
 import { isStdioConfig, isSSEConfig } from "./store/schema";
 
 function getProviderClientTransport(mcpConfig: McpProvider) {
