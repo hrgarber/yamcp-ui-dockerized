@@ -1,11 +1,15 @@
 import path from "path";
 import envPaths from "env-paths";
+import packageJson from "../package.json";
 
 const paths = envPaths("yamcp");
 
+// version
+export const VERSION = packageJson.version;
+
 // Server
 export const SERVER_NAME = "yamcp_gateway";
-export const SERVER_VERSION = "0.1.0";
+export const SERVER_VERSION = VERSION;
 
 // Store
 const storeDir = paths.data;

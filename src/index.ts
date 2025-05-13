@@ -5,9 +5,11 @@ import { serverCommands } from "./cli/server/server";
 import { workspaceCommands } from "./cli/workspace/workspace";
 import { runCommand } from "./cli/run/run";
 import { logCommand } from "./cli/log/log";
+import { VERSION } from "./config";
+
 const program = new Command();
 
-program.name("yamcp").description("YAMCP Gateway CLI").version("0.1.0");
+program.name("yamcp").description("YAMCP Gateway CLI").version(VERSION);
 program.showHelpAfterError("(add --help for additional information)");
 // Add server commands
 serverCommands(program);
