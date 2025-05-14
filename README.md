@@ -173,3 +173,7 @@ The diagram shows the main components of the YAMCP system:
 - **Logger**: Provides consolidated logging for all components
 - **Store**: Manages configuration for providers and workspaces
 - **MCP Servers**: Both local (stdio) and remote (SSE) servers that provide MCP services
+
+## 🪪 Security Audits
+
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/hamidra-yamcp-badge.png)](https://mseep.ai/app/hamidra-yamcp)
