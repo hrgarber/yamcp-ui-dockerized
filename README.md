@@ -34,14 +34,14 @@ yamcp run <yam-workspace-name>
 ## 🔑 Key Concepts
 
 - **MCP Servers**: Remote or local servers that provide Model Context Protocol services
-- **Workces (YAMs)**: Collections of MCP servers grouped together to be shared with AI Apps (e.g. a workce for coding, writing, design, magic making!)
-- **Gateway**: A local MCP server that manages connections to configured MCP servers in a workce and exposes them through a unified server to AI App's MCP clients
+- **Workspaces (YAMs)**: Collections of MCP servers grouped together to be shared with AI Apps (e.g. a workspace for coding, writing, design, magic making!)
+- **Gateway**: A local MCP server that manages connections to configured MCP servers in a workspace and exposes them through a unified server to AI App's MCP clients
 
 With YAMCP, you can:
 
-- Create workces to group MCP servers by AI application (e.g. Cursor, Claude, GitHub Copilot)
+- Create workspaces to group MCP servers by AI application (e.g. Cursor, Claude, GitHub Copilot)
 - Group servers by workflow purpose (e.g. software development, data science, technical writing)
-- Connect AI apps to a single gateway that provides access to all workce servers
+- Connect AI apps to a single gateway that provides access to all workspace servers
 - Manage and monitor multiple MCP server connections through a unified interface
 - Track all server communications with detailed logging and debugging capabilities
 
