@@ -271,9 +271,9 @@ export function Logs() {
         <CardContent>
           {logFiles.length > 0 ? (
             <div className="space-y-2">
-              {logFiles.map((logFile, index) => (
+              {logFiles.map((logFile) => (
                 <div
-                  key={index}
+                  key={`${logFile.name}-${logFile.modified}`}
                   className="flex items-center justify-between p-3 border rounded-lg"
                 >
                   <div className="flex items-center space-x-3">
