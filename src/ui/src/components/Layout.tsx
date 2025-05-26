@@ -105,10 +105,18 @@ function SidebarContent({ location }: { location: any }) {
 
       {/* Footer */}
       <div className="px-4 py-4 border-t">
-        <Button variant="ghost" size="sm" className="w-full justify-start">
+        <Link
+          to="/settings"
+          className={cn(
+            "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors w-full",
+            location.pathname === "/settings"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          )}
+        >
           <Settings className="mr-3 h-4 w-4" />
           Settings
-        </Button>
+        </Link>
       </div>
     </div>
   );
