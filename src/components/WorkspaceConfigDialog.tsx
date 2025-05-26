@@ -16,7 +16,6 @@ interface WorkspaceData {
   description: string;
   servers: string[];
   status: string;
-  lastUsed: string;
 }
 
 interface WorkspaceConfigDialogProps {

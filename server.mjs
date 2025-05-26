@@ -248,12 +248,13 @@ app.get("/api/servers", (req, res) => {
   try {
     const providers = getRealProviders();
 
-    const servers = Object.values(providers).map((provider, index) => {
+    const servers = Object.entries(providers).map(([key, provider]) => {
       const isStdio = provider.type === "stdio";
 
       return {
-        id: provider.namespace,
-        name: provider.namespace,
+        id: key,
+        name: key,
+        namespace: provider.namespace || key,
         type: provider.type,
         status: "stopped", // Default status - would need actual tracking
         ...(isStdio
@@ -265,7 +266,6 @@ app.get("/api/servers", (req, res) => {
           : {
               url: provider.providerParameters.url,
             }),
-        lastSeen: "Unknown", // Would need actual tracking
       };
     });
 
@@ -296,7 +296,6 @@ app.get("/api/workspaces", (req, res) => {
           }`,
           servers: validServers,
           status: "inactive", // Default status - would need actual tracking
-          lastUsed: "Unknown", // Would need actual tracking
         };
       }
     );
@@ -311,7 +310,36 @@ app.get("/api/workspaces", (req, res) => {
 app.get("/api/logs", (req, res) => {
   try {
     const logs = getRecentLogs(100);
-    res.json(logs);
+
+    // Add some mock logs for testing if no real logs exist
+    if (logs.length === 0) {
+      const mockLogs = [
+        {
+          id: "mock_1",
+          timestamp: new Date().toISOString(),
+          level: "info",
+          server: "vibe",
+          message: "Server started successfully",
+        },
+        {
+          id: "mock_2",
+          timestamp: new Date(Date.now() - 60000).toISOString(),
+          level: "error",
+          server: "fetch-mcp",
+          message: "Connection failed to external service",
+        },
+        {
+          id: "mock_3",
+          timestamp: new Date(Date.now() - 120000).toISOString(),
+          level: "warn",
+          server: "database",
+          message: "High memory usage detected",
+        },
+      ];
+      res.json(mockLogs);
+    } else {
+      res.json(logs);
+    }
   } catch (error) {
     console.error("Error getting logs:", error.message);
     res.status(500).json({ error: "Failed to get logs" });
@@ -399,7 +427,7 @@ app.post("/api/servers", (req, res) => {
 // Update server
 app.put("/api/servers/:id", (req, res) => {
   const { id } = req.params;
-  const { name, type, command, args, env, url } = req.body;
+  const { name, namespace, type, command, args, env, url } = req.body;
 
   try {
     const { providersPath } = getConfigPaths();
@@ -410,15 +438,16 @@ app.put("/api/servers/:id", (req, res) => {
       return res.status(404).json({ error: `Server ${id} not found` });
     }
 
-    // If name changed, we need to handle the namespace change
-    if (name !== id) {
+    // If namespace changed, we need to handle the key change
+    const newNamespace = namespace || name; // Use namespace if provided, fallback to name
+    if (newNamespace !== id) {
       // Remove old entry
       delete providers[id];
     }
 
     // Create updated provider
     const updatedProvider = {
-      namespace: name,
+      namespace: newNamespace,
       type: type,
       providerParameters:
         type === "stdio"
@@ -433,17 +462,17 @@ app.put("/api/servers/:id", (req, res) => {
     };
 
     // Add updated provider
-    providers[name] = updatedProvider;
+    providers[newNamespace] = updatedProvider;
 
-    // If name changed, update workspaces that reference this server
-    if (name !== id) {
+    // If namespace changed, update workspaces that reference this server
+    if (newNamespace !== id) {
       const { workspacesPath } = getConfigPaths();
       const workspaces = loadJSONFile(workspacesPath, {});
 
       for (const [workspaceName, serverList] of Object.entries(workspaces)) {
         const serverIndex = serverList.indexOf(id);
         if (serverIndex !== -1) {
-          serverList[serverIndex] = name;
+          serverList[serverIndex] = newNamespace;
         }
       }
 
@@ -455,7 +484,7 @@ app.put("/api/servers/:id", (req, res) => {
 
     res.json({
       success: true,
-      message: `Server ${name} updated successfully`,
+      message: `Server ${newNamespace} updated successfully`,
     });
   } catch (error) {
     console.error(`Error updating server ${id}:`, error.message);
@@ -538,22 +567,33 @@ app.post("/api/workspaces", (req, res) => {
 // Update workspace
 app.put("/api/workspaces/:id", (req, res) => {
   const { id } = req.params;
-  const { servers } = req.body;
+  const { name, servers } = req.body;
 
   try {
-    if (addWorkspace) {
-      addWorkspace(id, servers); // addWorkspace also updates existing workspaces
-    } else {
-      // Fallback to direct file manipulation
-      const { workspacesPath } = getConfigPaths();
-      const workspaces = loadJSONFile(workspacesPath, {});
-      workspaces[id] = servers;
-      fs.writeFileSync(workspacesPath, JSON.stringify(workspaces, null, 2));
+    const { workspacesPath } = getConfigPaths();
+    const workspaces = loadJSONFile(workspacesPath, {});
+
+    // Check if workspace exists
+    if (!workspaces[id]) {
+      return res.status(404).json({ error: `Workspace ${id} not found` });
     }
+
+    // If name changed, we need to handle the key change
+    const newName = name || id; // Use name if provided, fallback to id
+    if (newName !== id) {
+      // Remove old entry
+      delete workspaces[id];
+    }
+
+    // Add updated workspace
+    workspaces[newName] = servers;
+
+    // Save workspaces
+    fs.writeFileSync(workspacesPath, JSON.stringify(workspaces, null, 2));
 
     res.json({
       success: true,
-      message: `Workspace ${id} updated successfully`,
+      message: `Workspace ${newName} updated successfully`,
     });
   } catch (error) {
     console.error(`Error updating workspace ${id}:`, error.message);
@@ -620,6 +660,74 @@ app.get("/api/log-files/:workspace/:filename", (req, res) => {
   } catch (error) {
     console.error("Error downloading log file:", error.message);
     res.status(500).json({ error: "Failed to download log file" });
+  }
+});
+
+// Get raw JSON content for editing
+app.get("/api/config/providers", (req, res) => {
+  try {
+    const providers = getRealProviders();
+    res.json(providers);
+  } catch (error) {
+    console.error("Error getting providers config:", error.message);
+    res.status(500).json({ error: "Failed to get providers config" });
+  }
+});
+
+app.get("/api/config/workspaces", (req, res) => {
+  try {
+    const workspaces = getRealWorkspaces();
+    res.json(workspaces);
+  } catch (error) {
+    console.error("Error getting workspaces config:", error.message);
+    res.status(500).json({ error: "Failed to get workspaces config" });
+  }
+});
+
+// Update JSON config files
+app.put("/api/config/providers", (req, res) => {
+  try {
+    const { providersPath } = getConfigPaths();
+    const newConfig = req.body;
+
+    // Validate that it's a valid object
+    if (typeof newConfig !== "object" || newConfig === null) {
+      return res.status(400).json({ error: "Invalid JSON: must be an object" });
+    }
+
+    // Write to file
+    fs.writeFileSync(providersPath, JSON.stringify(newConfig, null, 2));
+
+    res.json({
+      success: true,
+      message: "Providers config updated successfully",
+    });
+  } catch (error) {
+    console.error("Error updating providers config:", error.message);
+    res.status(500).json({ error: "Failed to update providers config" });
+  }
+});
+
+app.put("/api/config/workspaces", (req, res) => {
+  try {
+    const { workspacesPath } = getConfigPaths();
+    const newConfig = req.body;
+
+    // Validate that it's a valid object
+    if (typeof newConfig !== "object" || newConfig === null) {
+      return res.status(400).json({ error: "Invalid JSON: must be an object" });
+    }
+
+    // Write to file
+    fs.writeFileSync(workspacesPath, JSON.stringify(newConfig, null, 2));
+
+    res.json({
+      success: true,
+      message: "Workspaces config updated successfully",
+    });
+  } catch (error) {
+    console.error("Error updating workspaces config:", error.message);
+    res.status(500).json({ error: "Failed to update workspaces config" });
   }
 });
 

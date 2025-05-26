@@ -22,17 +22,18 @@ import { Textarea } from "@/components/ui/textarea";
 interface ServerData {
   id: string;
   name: string;
+  namespace: string;
   type: "stdio" | "sse";
   status: string;
   command?: string;
   args?: string[];
   env?: Record<string, string>;
   url?: string;
-  lastSeen: string;
 }
 
 interface ServerFormData {
   name: string;
+  namespace: string;
   type: "stdio" | "sse";
   command: string;
   args: string;
@@ -61,6 +62,7 @@ export function EditServerDialog({
 }: EditServerDialogProps) {
   const [formData, setFormData] = useState<ServerFormData>({
     name: "",
+    namespace: "",
     type: "stdio",
     command: "",
     args: "",
@@ -75,6 +77,7 @@ export function EditServerDialog({
     if (server) {
       setFormData({
         name: server.name,
+        namespace: server.namespace,
         type: server.type,
         command: server.command || "",
         args: server.args?.join(" ") || "",
@@ -120,6 +123,7 @@ export function EditServerDialog({
     try {
       const payload = {
         name: formData.name,
+        namespace: formData.namespace,
         type: formData.type,
         ...(formData.type === "stdio"
           ? {
@@ -149,6 +153,7 @@ export function EditServerDialog({
         // Reset form
         setFormData({
           name: "",
+          namespace: "",
           type: "stdio",
           command: "",
           args: "",
@@ -209,6 +214,21 @@ export function EditServerDialog({
               {errors.name && (
                 <p className="text-sm text-red-500">{errors.name}</p>
               )}
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="namespace">Namespace</Label>
+              <Input
+                id="namespace"
+                value={formData.namespace}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    namespace: e.target.value,
+                  }))
+                }
+                placeholder="Enter namespace (unique identifier)"
+              />
             </div>
 
             <div className="grid gap-2">

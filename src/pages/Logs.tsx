@@ -8,7 +8,9 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Download, Trash2, RefreshCw } from "lucide-react";
+import { ClearLogsDialog } from "@/components/ClearLogsDialog";
+import { LogDetailsDialog } from "@/components/LogDetailsDialog";
+import { FileText, Download, Trash2, RefreshCw, Eye } from "lucide-react";
 
 interface LogEntry {
   id: string;
@@ -30,6 +32,9 @@ export function Logs() {
   const [logFiles, setLogFiles] = useState<LogFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showClearDialog, setShowClearDialog] = useState(false);
+  const [showLogDetails, setShowLogDetails] = useState(false);
+  const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null);
 
   useEffect(() => {
     fetchLogs();
@@ -87,13 +92,16 @@ export function Logs() {
   };
 
   const handleClearLogs = () => {
-    if (
-      confirm(
-        "Are you sure you want to clear all displayed logs? This will only clear the current view, not the actual log files."
-      )
-    ) {
-      setLogs([]);
-    }
+    setShowClearDialog(true);
+  };
+
+  const confirmClearLogs = () => {
+    setLogs([]);
+  };
+
+  const handleViewLogDetails = (log: LogEntry) => {
+    setSelectedLog(log);
+    setShowLogDetails(true);
   };
 
   const handleDownloadLogFile = (logFile: LogFile) => {
@@ -243,6 +251,17 @@ export function Logs() {
                       {log.message}
                     </p>
                   </div>
+                  <div className="flex-shrink-0">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleViewLogDetails(log)}
+                      className="gap-2"
+                    >
+                      <Eye className="h-4 w-4" />
+                      View
+                    </Button>
+                  </div>
                 </div>
               ))
             ) : (
@@ -310,6 +329,19 @@ export function Logs() {
           )}
         </CardContent>
       </Card>
+
+      <ClearLogsDialog
+        open={showClearDialog}
+        onOpenChange={setShowClearDialog}
+        onConfirm={confirmClearLogs}
+        logCount={logs.length}
+      />
+
+      <LogDetailsDialog
+        open={showLogDetails}
+        onOpenChange={setShowLogDetails}
+        log={selectedLog}
+      />
     </div>
   );
 }

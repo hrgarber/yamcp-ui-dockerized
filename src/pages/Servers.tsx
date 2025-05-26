@@ -19,17 +19,19 @@ import { Badge } from "@/components/ui/badge";
 import { AddServerDialog } from "@/components/AddServerDialog";
 import { EditServerDialog } from "@/components/EditServerDialog";
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
-import { Server, Settings, Trash2, Plus } from "lucide-react";
+import { JsonEditorDialog } from "@/components/JsonEditorDialog";
+import { Server, Settings, Trash2, Plus, FileText } from "lucide-react";
 
 interface ServerData {
   id: string;
   name: string;
+  namespace: string;
   type: "stdio" | "sse";
   status: string;
   command?: string;
   args?: string[];
+  env?: Record<string, string>;
   url?: string;
-  lastSeen: string;
 }
 
 export function Servers() {
@@ -38,6 +40,7 @@ export function Servers() {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showJsonEditor, setShowJsonEditor] = useState(false);
   const [editingServer, setEditingServer] = useState<ServerData | null>(null);
   const [deletingServer, setDeletingServer] = useState<ServerData | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -165,10 +168,16 @@ export function Servers() {
               Manage your MCP servers and their configurations
             </p>
           </div>
-          <Button onClick={handleAddServer}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Server
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowJsonEditor(true)}>
+              <FileText className="mr-2 h-4 w-4" />
+              Edit providers.json
+            </Button>
+            <Button onClick={handleAddServer}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Server
+            </Button>
+          </div>
         </div>
 
         <Card>
@@ -201,10 +210,10 @@ export function Servers() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
+                    <TableHead>Namespace</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Configuration</TableHead>
-                    <TableHead>Last Seen</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -213,6 +222,9 @@ export function Servers() {
                     <TableRow key={server.id}>
                       <TableCell className="font-medium">
                         {server.name}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {server.namespace}
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline">{server.type}</Badge>
@@ -227,7 +239,6 @@ export function Servers() {
                             }`
                           : server.url}
                       </TableCell>
-                      <TableCell>{server.lastSeen}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end space-x-2">
                           <Button
@@ -279,6 +290,15 @@ export function Servers() {
         itemName={deletingServer?.name || ""}
         itemType="server"
         isLoading={actionLoading === deletingServer?.id}
+      />
+
+      <JsonEditorDialog
+        open={showJsonEditor}
+        onOpenChange={setShowJsonEditor}
+        title="Edit providers.json"
+        description="Edit the raw providers configuration file. Be careful when making changes."
+        endpoint="/api/config/providers"
+        onSaved={fetchServers}
       />
     </>
   );

@@ -20,7 +20,15 @@ import { AddWorkspaceDialog } from "@/components/AddWorkspaceDialog";
 import { EditWorkspaceDialog } from "@/components/EditWorkspaceDialog";
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
 import { WorkspaceConfigDialog } from "@/components/WorkspaceConfigDialog";
-import { FolderOpen, Eye, Settings, Trash2, Plus } from "lucide-react";
+import { JsonEditorDialog } from "@/components/JsonEditorDialog";
+import {
+  FolderOpen,
+  Eye,
+  Settings,
+  Trash2,
+  Plus,
+  FileText,
+} from "lucide-react";
 
 interface WorkspaceData {
   id: string;
@@ -28,7 +36,6 @@ interface WorkspaceData {
   description: string;
   servers: string[];
   status: string;
-  lastUsed: string;
 }
 
 export function Workspaces() {
@@ -38,6 +45,7 @@ export function Workspaces() {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showConfigDialog, setShowConfigDialog] = useState(false);
+  const [showJsonEditor, setShowJsonEditor] = useState(false);
   const [editingWorkspace, setEditingWorkspace] =
     useState<WorkspaceData | null>(null);
   const [deletingWorkspace, setDeletingWorkspace] =
@@ -176,10 +184,16 @@ export function Workspaces() {
               Manage your server workspaces and configurations
             </p>
           </div>
-          <Button onClick={handleCreateWorkspace}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Workspace
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowJsonEditor(true)}>
+              <FileText className="mr-2 h-4 w-4" />
+              Edit workspaces.json
+            </Button>
+            <Button onClick={handleCreateWorkspace}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Workspace
+            </Button>
+          </div>
         </div>
 
         <Card>
@@ -215,7 +229,6 @@ export function Workspaces() {
                     <TableHead>Description</TableHead>
                     <TableHead>Servers</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Last Used</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -248,7 +261,6 @@ export function Workspaces() {
                         </div>
                       </TableCell>
                       <TableCell>{getStatusBadge(workspace.status)}</TableCell>
-                      <TableCell>{workspace.lastUsed}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end space-x-2">
                           <Button
@@ -314,6 +326,15 @@ export function Workspaces() {
         open={showConfigDialog}
         onOpenChange={setShowConfigDialog}
         workspace={viewingWorkspace}
+      />
+
+      <JsonEditorDialog
+        open={showJsonEditor}
+        onOpenChange={setShowJsonEditor}
+        title="Edit workspaces.json"
+        description="Edit the raw workspaces configuration file. Be careful when making changes."
+        endpoint="/api/config/workspaces"
+        onSaved={fetchWorkspaces}
       />
     </>
   );
