@@ -1,6 +1,6 @@
 {
   "name": "yamcp-ui",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Web-based dashboard for YAMCP (Yet Another MCP) - A Model Context Protocol workspace manager. Built on top of YAMCP by Hamid Alipour (https://github.com/hamidra/yamcp)",
   "type": "module",
   "bin": {
