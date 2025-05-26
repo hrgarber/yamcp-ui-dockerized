@@ -119,9 +119,13 @@ async function main() {
     process.exit(1);
   }
 
+  // Get port from environment or use default
+  const port = process.env.PORT || 8765;
+
   console.log("🚀 Starting dashboard server...");
-  console.log("📱 Dashboard will be available at: http://localhost:8765");
+  console.log(`📱 Dashboard will be available at: http://localhost:${port}`);
   console.log("");
+  console.log("💡 To use a different port: PORT=3000 npx yamcp-ui");
   console.log("Press Ctrl+C to stop the dashboard");
   console.log("");
 

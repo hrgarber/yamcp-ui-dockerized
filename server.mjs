@@ -10,6 +10,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
+// Default port 8765, can be overridden with PORT environment variable
+// Example: PORT=3000 npx yamcp-ui
 const PORT = process.env.PORT || 8765;
 
 // Import YAMCP modules from global package
@@ -630,11 +632,39 @@ async function startServer() {
   // Initialize YAMCP modules
   await initializeYAMCP();
 
-  // Bind only to localhost for security
-  app.listen(PORT, "localhost", () => {
+  // Try to start server with error handling
+  const server = app.listen(PORT, "localhost", () => {
     console.log(`Server running on http://localhost:${PORT}`);
     console.log("🔒 API access restricted to web interface only");
   });
+
+  // Handle port in use error
+  server.on("error", (error) => {
+    if (error.code === "EADDRINUSE") {
+      console.error(`\n❌ Port ${PORT} is already in use!`);
+      console.error(`\n💡 Suggestions:`);
+      console.error(`   1. Stop any other yamcp-ui instances running`);
+      console.error(
+        `   2. Try a different port by setting PORT environment variable:`
+      );
+      console.error(`      PORT=8766 npx yamcp-ui`);
+      console.error(`      PORT=3000 npx yamcp-ui`);
+      console.error(`      PORT=4000 npx yamcp-ui`);
+      console.error(`\n   3. Check what's using port ${PORT}:`);
+      console.error(`      lsof -ti:${PORT}`);
+      console.error(`\n   4. Kill the process using the port:`);
+      console.error(`      kill $(lsof -ti:${PORT})`);
+      console.error(
+        `\n🔍 Common causes: Another yamcp-ui instance, development server, or other web application\n`
+      );
+      process.exit(1);
+    } else {
+      console.error("Failed to start server:", error);
+      process.exit(1);
+    }
+  });
+
+  return server;
 }
 
 // Start the server
