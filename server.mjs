@@ -1,31 +1,90 @@
-const express = require("express");
-const path = require("path");
-const fs = require("fs");
+import express from "express";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+import cors from "cors";
+import envPaths from "env-paths";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8765;
 
-// Import YAMCP modules - we need to use the compiled JS files from dist
-const yamcpPath = path.join(__dirname, "..", "..", "dist");
-
-// Helper function to safely require YAMCP modules
-function requireYAMCP(modulePath) {
+// Import YAMCP modules from global package
+// Helper function to safely import YAMCP modules
+async function importYAMCP(modulePath) {
   try {
-    return require(path.join(yamcpPath, modulePath));
+    return await import(`yamcp/${modulePath}`);
   } catch (error) {
     console.error(`Failed to load YAMCP module ${modulePath}:`, error.message);
+    console.error(
+      "Make sure yamcp is installed globally: npm install -g yamcp"
+    );
     return null;
   }
 }
 
-// Load YAMCP modules
-const config = requireYAMCP("config.js");
-const { loadProvidersMap, loadWorkspaceMap } =
-  requireYAMCP("store/loader.js") || {};
-const { addMcpProviders, removeMcpProvider, getMcpProviders } =
-  requireYAMCP("store/provider.js") || {};
-const { addWorkspace, removeWorkspace, getWorkspaces } =
-  requireYAMCP("store/workspace.js") || {};
+// Load YAMCP modules (will be loaded asynchronously)
+let config = null;
+let loadProvidersMap = null;
+let loadWorkspaceMap = null;
+let addMcpProviders = null;
+let removeMcpProvider = null;
+let getMcpProviders = null;
+let addWorkspace = null;
+let removeWorkspace = null;
+let getWorkspaces = null;
+
+// Initialize YAMCP modules
+async function initializeYAMCP() {
+  const configModule = await importYAMCP("dist/config.js");
+  if (configModule) config = configModule;
+
+  const loaderModule = await importYAMCP("dist/store/loader.js");
+  if (loaderModule) {
+    loadProvidersMap = loaderModule.loadProvidersMap;
+    loadWorkspaceMap = loaderModule.loadWorkspaceMap;
+  }
+
+  const providerModule = await importYAMCP("dist/store/provider.js");
+  if (providerModule) {
+    addMcpProviders = providerModule.addMcpProviders;
+    removeMcpProvider = providerModule.removeMcpProvider;
+    getMcpProviders = providerModule.getMcpProviders;
+  }
+
+  const workspaceModule = await importYAMCP("dist/store/workspace.js");
+  if (workspaceModule) {
+    addWorkspace = workspaceModule.addWorkspace;
+    removeWorkspace = workspaceModule.removeWorkspace;
+    getWorkspaces = workspaceModule.getWorkspaces;
+  }
+}
+
+// Security: Only allow requests from the same origin (localhost)
+app.use(
+  cors({
+    origin: [`http://localhost:${PORT}`, `http://127.0.0.1:${PORT}`],
+    credentials: true,
+  })
+);
+
+// Additional security middleware
+app.use((req, res, next) => {
+  // Only allow API requests from the same host
+  const host = req.get("host");
+  const allowedHosts = [`localhost:${PORT}`, `127.0.0.1:${PORT}`];
+
+  if (req.path.startsWith("/api/") && !allowedHosts.includes(host)) {
+    return res
+      .status(403)
+      .json({ error: "Access denied: API only accessible from web interface" });
+  }
+
+  next();
+});
 
 // Serve static files from the React app build directory
 app.use(express.static(path.join(__dirname, "dist")));
@@ -36,8 +95,7 @@ app.use(express.json());
 // Helper function to get config paths
 function getConfigPaths() {
   if (!config) {
-    // Fallback to manual path construction if config module fails
-    const envPaths = require("env-paths");
+    // Fallback to envPaths if config module fails
     const paths = envPaths("yamcp");
     return {
       providersPath: path.join(paths.data, "providers.json"),
@@ -567,6 +625,20 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+// Initialize and start server
+async function startServer() {
+  // Initialize YAMCP modules
+  await initializeYAMCP();
+
+  // Bind only to localhost for security
+  app.listen(PORT, "localhost", () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+    console.log("🔒 API access restricted to web interface only");
+  });
+}
+
+// Start the server
+startServer().catch((error) => {
+  console.error("Failed to start server:", error);
+  process.exit(1);
 });

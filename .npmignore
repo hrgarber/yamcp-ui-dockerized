@@ -1,0 +1,45 @@
+# Development files
+src/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Node modules (will be installed by npm)
+node_modules/
+
+# Build artifacts that shouldn't be in package
+tsconfig.node.json
+vite.config.ts
+postcss.config.js
+tailwind.config.js
+
+# Development configs
+components.json
+
+# Test files
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+
+# Coverage
+coverage/
+
+# Temporary files
+*.tmp
+*.temp 
