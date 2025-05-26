@@ -26,6 +26,7 @@ interface ServerData {
   status: string;
   command?: string;
   args?: string[];
+  env?: Record<string, string>;
   url?: string;
   lastSeen: string;
 }
@@ -35,6 +36,7 @@ interface ServerFormData {
   type: "stdio" | "sse";
   command: string;
   args: string;
+  env: Record<string, string>;
   url: string;
 }
 
@@ -62,6 +64,7 @@ export function EditServerDialog({
     type: "stdio",
     command: "",
     args: "",
+    env: {},
     url: "",
   });
   const [loading, setLoading] = useState(false);
@@ -75,6 +78,7 @@ export function EditServerDialog({
         type: server.type,
         command: server.command || "",
         args: server.args?.join(" ") || "",
+        env: server.env || {},
         url: server.url || "",
       });
       setErrors({});
@@ -124,6 +128,7 @@ export function EditServerDialog({
                 .split(" ")
                 .map((arg) => arg.trim())
                 .filter((arg) => arg.length > 0),
+              env: formData.env,
             }
           : {
               url: formData.url,
@@ -147,6 +152,7 @@ export function EditServerDialog({
           type: "stdio",
           command: "",
           args: "",
+          env: {},
           url: "",
         });
       } else {
@@ -249,6 +255,63 @@ export function EditServerDialog({
                     placeholder="Space-separated arguments"
                     rows={3}
                   />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label>Environment Variables (optional)</Label>
+                  <div className="space-y-2">
+                    {Object.entries(formData.env).map(([key, value], index) => (
+                      <div key={index} className="flex gap-2">
+                        <Input
+                          placeholder="Variable name"
+                          value={key}
+                          onChange={(e) => {
+                            const newEnv = { ...formData.env };
+                            delete newEnv[key];
+                            newEnv[e.target.value] = value;
+                            setFormData((prev) => ({ ...prev, env: newEnv }));
+                          }}
+                          className="flex-1"
+                        />
+                        <Input
+                          placeholder="Variable value"
+                          value={value}
+                          onChange={(e) => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              env: { ...prev.env, [key]: e.target.value },
+                            }));
+                          }}
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const newEnv = { ...formData.env };
+                            delete newEnv[key];
+                            setFormData((prev) => ({ ...prev, env: newEnv }));
+                          }}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          env: { ...prev.env, "": "" },
+                        }));
+                      }}
+                    >
+                      Add Environment Variable
+                    </Button>
+                  </div>
                 </div>
               </>
             ) : (

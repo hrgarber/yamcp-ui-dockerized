@@ -260,6 +260,7 @@ app.get("/api/servers", (req, res) => {
           ? {
               command: provider.providerParameters.command,
               args: provider.providerParameters.args || [],
+              env: provider.providerParameters.env || {},
             }
           : {
               url: provider.providerParameters.url,
