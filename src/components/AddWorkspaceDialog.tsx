@@ -23,7 +23,6 @@ interface ServerData {
   id: string;
   name: string;
   type: "stdio" | "sse";
-  status: string;
 }
 
 interface WorkspaceFormData {
@@ -63,7 +62,12 @@ export function AddWorkspaceDialog({
       const response = await fetch("/api/servers");
       if (response.ok) {
         const servers = await response.json();
-        setAvailableServers(servers);
+        // Filter out the status property from each server object
+        const serversWithoutStatus = (servers as any[]).map((server: any) => {
+          const { status, ...serverWithoutStatus } = server;
+          return serverWithoutStatus;
+        });
+        setAvailableServers(serversWithoutStatus);
       } else {
         console.error("Failed to load servers");
       }
@@ -250,33 +254,31 @@ export function AddWorkspaceDialog({
                       }`}
                       onClick={() => handleServerToggle(server.id)}
                     >
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center">
                         <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={formData.servers.includes(server.id)}
-                            onChange={(e) => {
+                          <div
+                            className="flex items-center justify-center"
+                            onClick={(e) => {
                               e.stopPropagation();
                               handleServerToggle(server.id);
                             }}
-                            className="rounded"
-                            onClick={(e) => e.stopPropagation()}
-                          />
+                          >
+                            <input
+                              type="checkbox"
+                              checked={formData.servers.includes(server.id)}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                handleServerToggle(server.id);
+                              }}
+                              className="rounded w-4 h-4 cursor-pointer"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
                           <span className="font-medium">{server.name}</span>
                           <Badge variant="outline" className="text-xs">
                             {server.type}
                           </Badge>
                         </div>
-                        <Badge
-                          variant={
-                            server.status === "running"
-                              ? "default"
-                              : "secondary"
-                          }
-                          className="text-xs"
-                        >
-                          {server.status}
-                        </Badge>
                       </div>
                     </div>
                   ))}
