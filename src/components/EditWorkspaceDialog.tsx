@@ -263,8 +263,12 @@ export function EditWorkspaceDialog({
                           <input
                             type="checkbox"
                             checked={formData.servers.includes(server.id)}
-                            onChange={() => handleServerToggle(server.id)}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              handleServerToggle(server.id);
+                            }}
                             className="rounded"
+                            onClick={(e) => e.stopPropagation()}
                           />
                           <span className="font-medium">{server.name}</span>
                           <Badge variant="outline" className="text-xs">
