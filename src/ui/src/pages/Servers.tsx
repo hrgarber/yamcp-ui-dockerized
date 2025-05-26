@@ -19,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { AddServerDialog } from "@/components/AddServerDialog";
 import { EditServerDialog } from "@/components/EditServerDialog";
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
-import { Server, Play, Square, Settings, Trash2, Plus } from "lucide-react";
+import { Server, Settings, Trash2, Plus } from "lucide-react";
 
 interface ServerData {
   id: string;
@@ -60,49 +60,6 @@ export function Servers() {
       console.error("Error fetching servers:", error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleServerAction = async (
-    serverId: string,
-    action: "start" | "stop" | "delete"
-  ) => {
-    try {
-      setActionLoading(serverId);
-
-      let response;
-      if (action === "delete") {
-        response = await fetch(`/api/servers/${serverId}`, {
-          method: "DELETE",
-        });
-      } else {
-        response = await fetch(`/api/servers/${serverId}/${action}`, {
-          method: "POST",
-        });
-      }
-
-      if (response.ok) {
-        const result = await response.json();
-        console.log(result.message);
-
-        if (action === "delete") {
-          // Remove server from list
-          setServers(servers.filter((server) => server.id !== serverId));
-        } else {
-          // For start/stop, we'd need to update the server status
-          // For now, just refresh the list
-          fetchServers();
-        }
-      } else {
-        const error = await response.json();
-        console.error("Action failed:", error.error);
-        alert(`Action failed: ${error.error}`);
-      }
-    } catch (error) {
-      console.error(`Error performing ${action} on server ${serverId}:`, error);
-      alert(`Error performing ${action}: ${error}`);
-    } finally {
-      setActionLoading(null);
     }
   };
 
@@ -273,29 +230,6 @@ export function Servers() {
                       <TableCell>{server.lastSeen}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end space-x-2">
-                          {server.status === "running" ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                handleServerAction(server.id, "stop")
-                              }
-                              disabled={actionLoading === server.id}
-                            >
-                              <Square className="h-4 w-4" />
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                handleServerAction(server.id, "start")
-                              }
-                              disabled={actionLoading === server.id}
-                            >
-                              <Play className="h-4 w-4" />
-                            </Button>
-                          )}
                           <Button
                             variant="outline"
                             size="sm"

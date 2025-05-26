@@ -19,7 +19,8 @@ import { Badge } from "@/components/ui/badge";
 import { AddWorkspaceDialog } from "@/components/AddWorkspaceDialog";
 import { EditWorkspaceDialog } from "@/components/EditWorkspaceDialog";
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
-import { FolderOpen, Play, Square, Settings, Trash2, Plus } from "lucide-react";
+import { WorkspaceConfigDialog } from "@/components/WorkspaceConfigDialog";
+import { FolderOpen, Eye, Settings, Trash2, Plus } from "lucide-react";
 
 interface WorkspaceData {
   id: string;
@@ -36,9 +37,12 @@ export function Workspaces() {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showConfigDialog, setShowConfigDialog] = useState(false);
   const [editingWorkspace, setEditingWorkspace] =
     useState<WorkspaceData | null>(null);
   const [deletingWorkspace, setDeletingWorkspace] =
+    useState<WorkspaceData | null>(null);
+  const [viewingWorkspace, setViewingWorkspace] =
     useState<WorkspaceData | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
@@ -63,54 +67,6 @@ export function Workspaces() {
     }
   };
 
-  const handleWorkspaceAction = async (
-    workspaceId: string,
-    action: "start" | "stop" | "delete"
-  ) => {
-    try {
-      setActionLoading(workspaceId);
-
-      let response;
-      if (action === "delete") {
-        response = await fetch(`/api/workspaces/${workspaceId}`, {
-          method: "DELETE",
-        });
-      } else {
-        response = await fetch(`/api/workspaces/${workspaceId}/${action}`, {
-          method: "POST",
-        });
-      }
-
-      if (response.ok) {
-        const result = await response.json();
-        console.log(result.message);
-
-        if (action === "delete") {
-          // Remove workspace from list
-          setWorkspaces(
-            workspaces.filter((workspace) => workspace.id !== workspaceId)
-          );
-        } else {
-          // For start/stop, we'd need to update the workspace status
-          // For now, just refresh the list
-          fetchWorkspaces();
-        }
-      } else {
-        const error = await response.json();
-        console.error("Action failed:", error.error);
-        alert(`Action failed: ${error.error}`);
-      }
-    } catch (error) {
-      console.error(
-        `Error performing ${action} on workspace ${workspaceId}:`,
-        error
-      );
-      alert(`Error performing ${action}: ${error}`);
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
   const handleCreateWorkspace = () => {
     setShowAddDialog(true);
   };
@@ -118,6 +74,11 @@ export function Workspaces() {
   const handleEditWorkspace = (workspace: WorkspaceData) => {
     setEditingWorkspace(workspace);
     setShowEditDialog(true);
+  };
+
+  const handleShowConfig = (workspace: WorkspaceData) => {
+    setViewingWorkspace(workspace);
+    setShowConfigDialog(true);
   };
 
   const handleDeleteWorkspace = (workspace: WorkspaceData) => {
@@ -290,29 +251,14 @@ export function Workspaces() {
                       <TableCell>{workspace.lastUsed}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end space-x-2">
-                          {workspace.status === "active" ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                handleWorkspaceAction(workspace.id, "stop")
-                              }
-                              disabled={actionLoading === workspace.id}
-                            >
-                              <Square className="h-4 w-4" />
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                handleWorkspaceAction(workspace.id, "start")
-                              }
-                              disabled={actionLoading === workspace.id}
-                            >
-                              <Play className="h-4 w-4" />
-                            </Button>
-                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleShowConfig(workspace)}
+                            disabled={actionLoading === workspace.id}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
                           <Button
                             variant="outline"
                             size="sm"
@@ -362,6 +308,12 @@ export function Workspaces() {
         itemName={deletingWorkspace?.name || ""}
         itemType="workspace"
         isLoading={actionLoading === deletingWorkspace?.id}
+      />
+
+      <WorkspaceConfigDialog
+        open={showConfigDialog}
+        onOpenChange={setShowConfigDialog}
+        workspace={viewingWorkspace}
       />
     </>
   );
