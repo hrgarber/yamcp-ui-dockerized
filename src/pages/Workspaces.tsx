@@ -128,17 +128,6 @@ export function Workspaces() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "active":
-        return <Badge className="bg-green-100 text-green-800">Active</Badge>;
-      case "inactive":
-        return <Badge variant="secondary">Inactive</Badge>;
-      default:
-        return <Badge variant="outline">Unknown</Badge>;
-    }
-  };
-
   if (loading) {
     return (
       <div className="space-y-6">
@@ -228,7 +217,6 @@ export function Workspaces() {
                     <TableHead>Name</TableHead>
                     <TableHead>Description</TableHead>
                     <TableHead>Servers</TableHead>
-                    <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -260,7 +248,6 @@ export function Workspaces() {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>{getStatusBadge(workspace.status)}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end space-x-2">
                           <Button
