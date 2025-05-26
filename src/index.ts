@@ -5,6 +5,7 @@ import { serverCommands } from "./cli/server/server";
 import { workspaceCommands } from "./cli/workspace/workspace";
 import { runCommand } from "./cli/run/run";
 import { logCommand } from "./cli/log/log";
+import { uiCommand } from "./cli/ui/ui";
 import { VERSION } from "./config";
 
 const program = new Command();
@@ -22,5 +23,8 @@ runCommand(program);
 
 // Add log command
 logCommand(program);
+
+// Add UI command
+uiCommand(program);
 
 program.parseAsync(process.argv);

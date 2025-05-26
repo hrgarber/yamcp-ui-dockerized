@@ -8,5 +8,6 @@
     "types": ["node"],
     "jsx": "react"
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["src/ui/**/*"]
 }

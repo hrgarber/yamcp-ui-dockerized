@@ -1,0 +1,305 @@
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { AddWorkspaceDialog } from "@/components/AddWorkspaceDialog";
+import { FolderOpen, Play, Square, Settings, Trash2, Plus } from "lucide-react";
+
+interface WorkspaceData {
+  id: string;
+  name: string;
+  description: string;
+  servers: string[];
+  status: string;
+  lastUsed: string;
+}
+
+export function Workspaces() {
+  const [workspaces, setWorkspaces] = useState<WorkspaceData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchWorkspaces();
+  }, []);
+
+  const fetchWorkspaces = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/workspaces");
+      if (response.ok) {
+        const data = await response.json();
+        setWorkspaces(data);
+      } else {
+        console.error("Failed to fetch workspaces");
+      }
+    } catch (error) {
+      console.error("Error fetching workspaces:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleWorkspaceAction = async (
+    workspaceId: string,
+    action: "start" | "stop" | "delete"
+  ) => {
+    try {
+      setActionLoading(workspaceId);
+
+      let response;
+      if (action === "delete") {
+        response = await fetch(`/api/workspaces/${workspaceId}`, {
+          method: "DELETE",
+        });
+      } else {
+        response = await fetch(`/api/workspaces/${workspaceId}/${action}`, {
+          method: "POST",
+        });
+      }
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log(result.message);
+
+        if (action === "delete") {
+          // Remove workspace from list
+          setWorkspaces(
+            workspaces.filter((workspace) => workspace.id !== workspaceId)
+          );
+        } else {
+          // For start/stop, we'd need to update the workspace status
+          // For now, just refresh the list
+          fetchWorkspaces();
+        }
+      } else {
+        const error = await response.json();
+        console.error("Action failed:", error.error);
+        alert(`Action failed: ${error.error}`);
+      }
+    } catch (error) {
+      console.error(
+        `Error performing ${action} on workspace ${workspaceId}:`,
+        error
+      );
+      alert(`Error performing ${action}: ${error}`);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleCreateWorkspace = () => {
+    setShowAddDialog(true);
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "active":
+        return <Badge className="bg-green-100 text-green-800">Active</Badge>;
+      case "inactive":
+        return <Badge variant="secondary">Inactive</Badge>;
+      default:
+        return <Badge variant="outline">Unknown</Badge>;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Workspaces</h1>
+            <p className="text-muted-foreground">
+              Manage your server workspaces and configurations
+            </p>
+          </div>
+          <Button disabled>
+            <FolderOpen className="mr-2 h-4 w-4" />
+            Create Workspace
+          </Button>
+        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Workspaces</CardTitle>
+            <CardDescription>Loading workspaces...</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <div
+                  key={i}
+                  className="h-12 bg-gray-200 rounded animate-pulse"
+                ></div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Workspaces</h1>
+            <p className="text-muted-foreground">
+              Manage your server workspaces and configurations
+            </p>
+          </div>
+          <Button onClick={handleCreateWorkspace}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Workspace
+          </Button>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Workspaces</CardTitle>
+            <CardDescription>
+              Grouped server configurations for different use cases (
+              {workspaces.length} total)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {workspaces.length === 0 ? (
+              <div className="text-center py-8">
+                <FolderOpen className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-semibold text-gray-900">
+                  No workspaces
+                </h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Get started by creating your first workspace to group servers.
+                </p>
+                <div className="mt-6">
+                  <Button onClick={handleCreateWorkspace}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create Workspace
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Servers</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Last Used</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {workspaces.map((workspace) => (
+                    <TableRow key={workspace.id}>
+                      <TableCell className="font-medium">
+                        {workspace.name}
+                      </TableCell>
+                      <TableCell className="max-w-xs">
+                        {workspace.description}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {workspace.servers.length > 0 ? (
+                            workspace.servers.map((server) => (
+                              <Badge
+                                key={server}
+                                variant="outline"
+                                className="text-xs"
+                              >
+                                {server}
+                              </Badge>
+                            ))
+                          ) : (
+                            <span className="text-sm text-muted-foreground">
+                              No servers
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>{getStatusBadge(workspace.status)}</TableCell>
+                      <TableCell>{workspace.lastUsed}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end space-x-2">
+                          {workspace.status === "active" ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                handleWorkspaceAction(workspace.id, "stop")
+                              }
+                              disabled={actionLoading === workspace.id}
+                            >
+                              <Square className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                handleWorkspaceAction(workspace.id, "start")
+                              }
+                              disabled={actionLoading === workspace.id}
+                            >
+                              <Play className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={actionLoading === workspace.id}
+                          >
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              if (
+                                confirm(
+                                  `Are you sure you want to delete workspace "${workspace.name}"?`
+                                )
+                              ) {
+                                handleWorkspaceAction(workspace.id, "delete");
+                              }
+                            }}
+                            disabled={actionLoading === workspace.id}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <AddWorkspaceDialog
+        open={showAddDialog}
+        onOpenChange={setShowAddDialog}
+        onWorkspaceAdded={fetchWorkspaces}
+      />
+    </>
+  );
+}
