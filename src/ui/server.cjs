@@ -335,6 +335,73 @@ app.post("/api/servers", (req, res) => {
   }
 });
 
+// Update server
+app.put("/api/servers/:id", (req, res) => {
+  const { id } = req.params;
+  const { name, type, command, args, env, url } = req.body;
+
+  try {
+    const { providersPath } = getConfigPaths();
+    const providers = loadJSONFile(providersPath, {});
+
+    // Check if server exists
+    if (!providers[id]) {
+      return res.status(404).json({ error: `Server ${id} not found` });
+    }
+
+    // If name changed, we need to handle the namespace change
+    if (name !== id) {
+      // Remove old entry
+      delete providers[id];
+    }
+
+    // Create updated provider
+    const updatedProvider = {
+      namespace: name,
+      type: type,
+      providerParameters:
+        type === "stdio"
+          ? {
+              command,
+              args: args || [],
+              env: env || {},
+            }
+          : {
+              url,
+            },
+    };
+
+    // Add updated provider
+    providers[name] = updatedProvider;
+
+    // If name changed, update workspaces that reference this server
+    if (name !== id) {
+      const { workspacesPath } = getConfigPaths();
+      const workspaces = loadJSONFile(workspacesPath, {});
+
+      for (const [workspaceName, serverList] of Object.entries(workspaces)) {
+        const serverIndex = serverList.indexOf(id);
+        if (serverIndex !== -1) {
+          serverList[serverIndex] = name;
+        }
+      }
+
+      fs.writeFileSync(workspacesPath, JSON.stringify(workspaces, null, 2));
+    }
+
+    // Save providers
+    fs.writeFileSync(providersPath, JSON.stringify(providers, null, 2));
+
+    res.json({
+      success: true,
+      message: `Server ${name} updated successfully`,
+    });
+  } catch (error) {
+    console.error(`Error updating server ${id}:`, error.message);
+    res.status(500).json({ error: `Failed to update server ${id}` });
+  }
+});
+
 // Workspace actions
 app.post("/api/workspaces/:id/start", (req, res) => {
   const { id } = req.params;

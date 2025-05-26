@@ -6,7 +6,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { AddServerDialog } from "@/components/AddServerDialog";
+import { AddWorkspaceDialog } from "@/components/AddWorkspaceDialog";
 import { Server, FolderOpen, Activity, AlertCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface Stats {
   totalServers: number;
@@ -34,6 +37,9 @@ export function Dashboard() {
   });
   const [recentLogs, setRecentLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAddServerDialog, setShowAddServerDialog] = useState(false);
+  const [showAddWorkspaceDialog, setShowAddWorkspaceDialog] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchDashboardData();
@@ -66,18 +72,25 @@ export function Dashboard() {
   const handleQuickAction = (action: string) => {
     switch (action) {
       case "add-server":
-        // Navigate to servers page with add modal
-        window.location.href = "/servers?action=add";
+        setShowAddServerDialog(true);
         break;
       case "create-workspace":
-        // Navigate to workspaces page with create modal
-        window.location.href = "/workspaces?action=create";
+        setShowAddWorkspaceDialog(true);
         break;
       case "view-logs":
-        // Navigate to logs page
-        window.location.href = "/logs";
+        navigate("/logs");
         break;
     }
+  };
+
+  const handleServerAdded = () => {
+    // Refresh dashboard data after adding a server
+    fetchDashboardData();
+  };
+
+  const handleWorkspaceAdded = () => {
+    // Refresh dashboard data after adding a workspace
+    fetchDashboardData();
   };
 
   const getActivityColor = (level: string) => {
@@ -121,151 +134,168 @@ export function Dashboard() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Overview of your YAMCP servers and workspaces
-        </p>
-      </div>
+    <>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Overview of your YAMCP servers and workspaces
+          </p>
+        </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Servers</CardTitle>
-            <Server className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalServers}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.activeServers} active
-            </p>
-          </CardContent>
-        </Card>
+        {/* Stats Cards */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Total Servers
+              </CardTitle>
+              <Server className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalServers}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.activeServers} active
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Active Servers
-            </CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.activeServers}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.totalServers > 0
-                ? Math.round((stats.activeServers / stats.totalServers) * 100)
-                : 0}
-              % uptime
-            </p>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Active Servers
+              </CardTitle>
+              <Activity className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.activeServers}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.totalServers > 0
+                  ? Math.round((stats.activeServers / stats.totalServers) * 100)
+                  : 0}
+                % uptime
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Workspaces</CardTitle>
-            <FolderOpen className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalWorkspaces}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.activeWorkspaces} active
-            </p>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Workspaces</CardTitle>
+              <FolderOpen className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalWorkspaces}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.activeWorkspaces} active
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Issues</CardTitle>
-            <AlertCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.issues}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.issues === 0
-                ? "All systems operational"
-                : "Needs attention"}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Issues</CardTitle>
+              <AlertCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.issues}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.issues === 0
+                  ? "All systems operational"
+                  : "Needs attention"}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Recent Activity */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>
-              Latest server and workspace events
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentLogs.length > 0 ? (
-                recentLogs.map((log) => (
-                  <div key={log.id} className="flex items-center space-x-4">
-                    <div
-                      className={`w-2 h-2 rounded-full ${getActivityColor(
-                        log.level
-                      )}`}
-                    ></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{log.message}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {log.server} •{" "}
-                        {new Date(log.timestamp).toLocaleString()}
-                      </p>
+        {/* Recent Activity */}
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+              <CardDescription>
+                Latest server and workspace events
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {recentLogs.length > 0 ? (
+                  recentLogs.map((log) => (
+                    <div key={log.id} className="flex items-center space-x-4">
+                      <div
+                        className={`w-2 h-2 rounded-full ${getActivityColor(
+                          log.level
+                        )}`}
+                      ></div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{log.message}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {log.server} •{" "}
+                          {new Date(log.timestamp).toLocaleString()}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No recent activity
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No recent activity
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common tasks and operations</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <button
-                onClick={() => handleQuickAction("add-server")}
-                className="w-full text-left p-3 rounded-md hover:bg-accent transition-colors"
-              >
-                <div className="font-medium">Add New Server</div>
-                <div className="text-sm text-muted-foreground">
-                  Configure a new MCP server
-                </div>
-              </button>
-              <button
-                onClick={() => handleQuickAction("create-workspace")}
-                className="w-full text-left p-3 rounded-md hover:bg-accent transition-colors"
-              >
-                <div className="font-medium">Create Workspace</div>
-                <div className="text-sm text-muted-foreground">
-                  Group servers into a workspace
-                </div>
-              </button>
-              <button
-                onClick={() => handleQuickAction("view-logs")}
-                className="w-full text-left p-3 rounded-md hover:bg-accent transition-colors"
-              >
-                <div className="font-medium">View Logs</div>
-                <div className="text-sm text-muted-foreground">
-                  Check server communication logs
-                </div>
-              </button>
-            </div>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+              <CardDescription>Common tasks and operations</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <button
+                  onClick={() => handleQuickAction("add-server")}
+                  className="w-full text-left p-3 rounded-md hover:bg-accent transition-colors"
+                >
+                  <div className="font-medium">Add New Server</div>
+                  <div className="text-sm text-muted-foreground">
+                    Configure a new MCP server
+                  </div>
+                </button>
+                <button
+                  onClick={() => handleQuickAction("create-workspace")}
+                  className="w-full text-left p-3 rounded-md hover:bg-accent transition-colors"
+                >
+                  <div className="font-medium">Create Workspace</div>
+                  <div className="text-sm text-muted-foreground">
+                    Group servers into a workspace
+                  </div>
+                </button>
+                <button
+                  onClick={() => handleQuickAction("view-logs")}
+                  className="w-full text-left p-3 rounded-md hover:bg-accent transition-colors"
+                >
+                  <div className="font-medium">View Logs</div>
+                  <div className="text-sm text-muted-foreground">
+                    Check server communication logs
+                  </div>
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
+
+      {/* Modal Dialogs */}
+      <AddServerDialog
+        open={showAddServerDialog}
+        onOpenChange={setShowAddServerDialog}
+        onServerAdded={handleServerAdded}
+      />
+
+      <AddWorkspaceDialog
+        open={showAddWorkspaceDialog}
+        onOpenChange={setShowAddWorkspaceDialog}
+        onWorkspaceAdded={handleWorkspaceAdded}
+      />
+    </>
   );
 }

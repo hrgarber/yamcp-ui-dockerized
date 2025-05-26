@@ -17,6 +17,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AddServerDialog } from "@/components/AddServerDialog";
+import { EditServerDialog } from "@/components/EditServerDialog";
+import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
 import { Server, Play, Square, Settings, Trash2, Plus } from "lucide-react";
 
 interface ServerData {
@@ -34,6 +36,10 @@ export function Servers() {
   const [servers, setServers] = useState<ServerData[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [editingServer, setEditingServer] = useState<ServerData | null>(null);
+  const [deletingServer, setDeletingServer] = useState<ServerData | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
@@ -102,6 +108,46 @@ export function Servers() {
 
   const handleAddServer = () => {
     setShowAddDialog(true);
+  };
+
+  const handleEditServer = (server: ServerData) => {
+    setEditingServer(server);
+    setShowEditDialog(true);
+  };
+
+  const handleDeleteServer = (server: ServerData) => {
+    setDeletingServer(server);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteServer = async () => {
+    if (!deletingServer) return;
+
+    try {
+      setActionLoading(deletingServer.id);
+
+      const response = await fetch(`/api/servers/${deletingServer.id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log(result.message);
+        // Remove server from list
+        setServers(servers.filter((server) => server.id !== deletingServer.id));
+        setShowDeleteDialog(false);
+        setDeletingServer(null);
+      } else {
+        const error = await response.json();
+        console.error("Delete failed:", error.error);
+        alert(`Delete failed: ${error.error}`);
+      }
+    } catch (error) {
+      console.error(`Error deleting server ${deletingServer.id}:`, error);
+      alert(`Error deleting server: ${error}`);
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -253,6 +299,7 @@ export function Servers() {
                           <Button
                             variant="outline"
                             size="sm"
+                            onClick={() => handleEditServer(server)}
                             disabled={actionLoading === server.id}
                           >
                             <Settings className="h-4 w-4" />
@@ -260,15 +307,7 @@ export function Servers() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => {
-                              if (
-                                confirm(
-                                  `Are you sure you want to delete server "${server.name}"?`
-                                )
-                              ) {
-                                handleServerAction(server.id, "delete");
-                              }
-                            }}
+                            onClick={() => handleDeleteServer(server)}
                             disabled={actionLoading === server.id}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -288,6 +327,24 @@ export function Servers() {
         open={showAddDialog}
         onOpenChange={setShowAddDialog}
         onServerAdded={fetchServers}
+      />
+
+      <EditServerDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        onServerUpdated={fetchServers}
+        server={editingServer}
+      />
+
+      <DeleteConfirmDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onConfirm={confirmDeleteServer}
+        title="Delete Server"
+        description="Are you sure you want to delete this server?"
+        itemName={deletingServer?.name || ""}
+        itemType="server"
+        isLoading={actionLoading === deletingServer?.id}
       />
     </>
   );

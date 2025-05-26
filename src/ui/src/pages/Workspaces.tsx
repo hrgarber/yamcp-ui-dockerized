@@ -17,6 +17,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AddWorkspaceDialog } from "@/components/AddWorkspaceDialog";
+import { EditWorkspaceDialog } from "@/components/EditWorkspaceDialog";
+import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
 import { FolderOpen, Play, Square, Settings, Trash2, Plus } from "lucide-react";
 
 interface WorkspaceData {
@@ -32,6 +34,12 @@ export function Workspaces() {
   const [workspaces, setWorkspaces] = useState<WorkspaceData[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [editingWorkspace, setEditingWorkspace] =
+    useState<WorkspaceData | null>(null);
+  const [deletingWorkspace, setDeletingWorkspace] =
+    useState<WorkspaceData | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
@@ -105,6 +113,50 @@ export function Workspaces() {
 
   const handleCreateWorkspace = () => {
     setShowAddDialog(true);
+  };
+
+  const handleEditWorkspace = (workspace: WorkspaceData) => {
+    setEditingWorkspace(workspace);
+    setShowEditDialog(true);
+  };
+
+  const handleDeleteWorkspace = (workspace: WorkspaceData) => {
+    setDeletingWorkspace(workspace);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteWorkspace = async () => {
+    if (!deletingWorkspace) return;
+
+    try {
+      setActionLoading(deletingWorkspace.id);
+
+      const response = await fetch(`/api/workspaces/${deletingWorkspace.id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log(result.message);
+        // Remove workspace from list
+        setWorkspaces(
+          workspaces.filter(
+            (workspace) => workspace.id !== deletingWorkspace.id
+          )
+        );
+        setShowDeleteDialog(false);
+        setDeletingWorkspace(null);
+      } else {
+        const error = await response.json();
+        console.error("Delete failed:", error.error);
+        alert(`Delete failed: ${error.error}`);
+      }
+    } catch (error) {
+      console.error(`Error deleting workspace ${deletingWorkspace.id}:`, error);
+      alert(`Error deleting workspace: ${error}`);
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -264,6 +316,7 @@ export function Workspaces() {
                           <Button
                             variant="outline"
                             size="sm"
+                            onClick={() => handleEditWorkspace(workspace)}
                             disabled={actionLoading === workspace.id}
                           >
                             <Settings className="h-4 w-4" />
@@ -271,15 +324,7 @@ export function Workspaces() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => {
-                              if (
-                                confirm(
-                                  `Are you sure you want to delete workspace "${workspace.name}"?`
-                                )
-                              ) {
-                                handleWorkspaceAction(workspace.id, "delete");
-                              }
-                            }}
+                            onClick={() => handleDeleteWorkspace(workspace)}
                             disabled={actionLoading === workspace.id}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -299,6 +344,24 @@ export function Workspaces() {
         open={showAddDialog}
         onOpenChange={setShowAddDialog}
         onWorkspaceAdded={fetchWorkspaces}
+      />
+
+      <EditWorkspaceDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        onWorkspaceUpdated={fetchWorkspaces}
+        workspace={editingWorkspace}
+      />
+
+      <DeleteConfirmDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onConfirm={confirmDeleteWorkspace}
+        title="Delete Workspace"
+        description="Are you sure you want to delete this workspace?"
+        itemName={deletingWorkspace?.name || ""}
+        itemType="workspace"
+        isLoading={actionLoading === deletingWorkspace?.id}
       />
     </>
   );
