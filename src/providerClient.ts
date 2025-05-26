@@ -19,7 +19,17 @@ function getProviderClientTransport(mcpConfig: McpProvider) {
     ) {
       delete providerParameters.env;
     }
-    return new StdioClientTransport(providerParameters);
+
+    // inherit the process PATH to allow provider resolve commands with access to the process PATH
+    const env = {
+      ...providerParameters?.env,
+      ...(process.env.PATH ? { PATH: process.env.PATH } : {}), // Explicitly set PATH to inherit the process PATH
+    };
+
+    return new StdioClientTransport({
+      ...providerParameters,
+      env,
+    });
   }
   if (isSSEConfig(mcpConfig)) {
     const { providerParameters } = mcpConfig;
