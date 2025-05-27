@@ -6,6 +6,10 @@ A beautiful web-based dashboard for [YAMCP (Yet Another MCP)](https://github.com
 
 YAMCP UI provides an intuitive web interface to manage your MCP servers, workspaces, and configurations. Built as a standalone npm package that integrates seamlessly with YAMCP.
 
+## Demo
+
+![YAMCP UI Demo](yamcp-ui-demo.gif)
+
 ## Features
 
 - 🎛️ **Server Management**: Add, edit, and delete MCP servers
