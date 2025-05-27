@@ -8,7 +8,7 @@ YAMCP UI provides an intuitive web interface to manage your MCP servers, workspa
 
 ## Demo
 
-![YAMCP UI Demo](yamcp-ui-demo.gif)
+![YAMCP UI Demo](assets/demo/yamcp-ui-demo.gif)
 
 ## Features
 
