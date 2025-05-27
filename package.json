@@ -6,6 +6,13 @@
   "bin": {
     "yamcp-ui": "./bin/yamcp-ui.js"
   },
+  "files": [
+    "dist",
+    "bin",
+    "server.mjs",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
