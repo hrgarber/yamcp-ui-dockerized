@@ -1,0 +1,26 @@
+services:
+  yamcp-ui:
+    build: .
+    container_name: yamcp-ui-dev
+    ports:
+      - "5173:5173"  # Vite dev server (frontend)
+      - "8765:8765"  # Express server (backend API)
+    environment:
+      - NODE_ENV=development
+    volumes:
+      # Data persistence
+      - yamcp-data:/root/.local/share/yamcp
+      # Optional: Mount source for hot reloading (comment out if not needed)
+      - ./src:/app/src
+      - ./index.html:/app/index.html
+      - ./server.mjs:/app/server.mjs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8765"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  yamcp-data:
+    name: yamcp-ui-data
