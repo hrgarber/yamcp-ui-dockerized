@@ -1,5 +1,8 @@
 FROM node:18-alpine
 
+# Install Python and pip for MCP server testing
+RUN apk add --no-cache python3 py3-pip
+
 # Install process manager for running multiple processes, PM2, and yamcp
 RUN npm install -g concurrently pm2 yamcp
 
