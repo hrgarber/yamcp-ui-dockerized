@@ -1,7 +1,7 @@
 FROM node:18-alpine
 
-# Install process manager for running multiple processes
-RUN npm install -g concurrently
+# Install process manager for running multiple processes, PM2, and yamcp
+RUN npm install -g concurrently pm2 yamcp
 
 WORKDIR /app
 
@@ -17,7 +17,7 @@ COPY . .
 # Expose both ports
 EXPOSE 5173 8765
 
-# Run both frontend and backend concurrently
-CMD ["concurrently", "-n", "frontend,backend", "-c", "cyan,green", \
+# Run both frontend and backend-hub concurrently
+CMD ["concurrently", "-n", "frontend,backend-hub", "-c", "cyan,green", \
      "npm run dev -- --host 0.0.0.0", \
-     "npm start"]
+     "pm2-runtime start /app/ecosystem.config.js"]
