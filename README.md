@@ -85,8 +85,8 @@ Simply press Enter or type 'y' to install the latest version of YAMCP.
 
 ```bash
 # Clone the repository
-git clone https://github.com/eladcandroid/yamcp-ui.git
-cd yamcp-ui
+git clone https://github.com/hrgarber/yamcp-ui-dockerized.git
+cd yamcp-ui-dockerized
 
 # Install dependencies
 npm install
