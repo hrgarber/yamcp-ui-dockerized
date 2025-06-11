@@ -11,7 +11,7 @@ services:
       - NODE_ENV=development
     volumes:
       # Data persistence
-      - yamcp-data:/root/.local/share/yamcp
+      - yamcp-data:/root/.local/share/yamcp-nodejs
       # Optional: Mount source for hot reloading (comment out if not needed)
       - ../src:/app/src
       - ../index.html:/app/index.html
