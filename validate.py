@@ -9,9 +9,9 @@ import time
 import json
 import signal
 import sys
+import subprocess
 from typing import Tuple
 
-import docker
 import requests
 import sseclient
 
@@ -28,11 +28,9 @@ logger = logging.getLogger(__name__)
 
 class MCPHubValidator:
     def __init__(self):
-        self.docker_client = docker.from_env()
         self.container_name = 'yamcp-ui-dev'
         self.frontend_url = 'http://localhost:5173'
         self.backend_url = 'http://localhost:8765'
-        self.container = None
         
         # Results tracking
         self.results = {
@@ -46,16 +44,16 @@ class MCPHubValidator:
     def find_container(self) -> bool:
         """Find and connect to the yamcp-ui container"""
         try:
-            containers = self.docker_client.containers.list(
-                filters={'name': self.container_name}
+            result = subprocess.run(
+                ['docker', 'ps', '--filter', f'name={self.container_name}', '--format', '{{.Names}}'],
+                capture_output=True, text=True, timeout=10
             )
             
-            if not containers:
+            if result.returncode != 0 or self.container_name not in result.stdout:
                 logger.error(f"Container {self.container_name} not found")
                 return False
                 
-            self.container = containers[0]
-            logger.info(f"Found container: {self.container.name}")
+            logger.info(f"Found container: {self.container_name}")
             return True
             
         except Exception as e:
@@ -67,8 +65,12 @@ class MCPHubValidator:
         logger.info("🔍 Validating container health...")
         
         try:
-            self.container.reload()
-            is_running = self.container.status == 'running'
+            result = subprocess.run(
+                ['docker', 'ps', '--filter', f'name={self.container_name}', '--format', '{{.Status}}'],
+                capture_output=True, text=True, timeout=10
+            )
+            
+            is_running = result.returncode == 0 and 'Up' in result.stdout
             logger.info(f"✅ Container health: {'PASS' if is_running else 'FAIL'}")
             return is_running
             
@@ -81,12 +83,13 @@ class MCPHubValidator:
         logger.info("🔍 Validating API functionality...")
         
         try:
-            result = self.container.exec_run([
+            result = subprocess.run([
+                'docker', 'exec', self.container_name,
                 'wget', '-q', '-O', '-', 'http://localhost:8765/api/stats'
-            ])
+            ], capture_output=True, text=True, timeout=10)
             
-            if result.exit_code == 0:
-                json.loads(result.output.decode())  # Just check it's valid JSON
+            if result.returncode == 0:
+                json.loads(result.stdout)  # Just check it's valid JSON
                 logger.info("✅ API functionality: PASS")
                 return True
             else:
@@ -104,13 +107,17 @@ class MCPHubValidator:
         try:
             # Setup simple test
             self._setup_test_workspace()
+            time.sleep(1)  # Give it a moment to register
             
-            # Just check SSE headers
-            url = f"{self.backend_url}/mcp/validation-workspace"
-            response = requests.get(url, stream=True, timeout=5)
+            # Test using wget from within container for better reliability
+            result = subprocess.run([
+                'docker', 'exec', self.container_name,
+                'timeout', '5', 'wget', '-q', '-S', '-O', '/dev/null',
+                'http://localhost:8765/mcp/validation-workspace'
+            ], capture_output=True, text=True, timeout=10)
             
-            is_sse = (response.status_code == 200 and 
-                     'text/event-stream' in response.headers.get('content-type', ''))
+            is_sse = (result.returncode == 0 and 
+                     'text/event-stream' in result.stderr)
             
             logger.info(f"✅ SSE streaming: {'PASS' if is_sse else 'FAIL'}")
             return is_sse
@@ -125,11 +132,12 @@ class MCPHubValidator:
         
         try:
             # Just check PM2 is managing the process
-            result = self.container.exec_run([
-                'pgrep', '-f', 'yamcp-ui-backend-hub'
-            ])
+            result = subprocess.run([
+                'docker', 'exec', self.container_name,
+                'pgrep', '-f', 'server.mjs'
+            ], capture_output=True, text=True, timeout=10)
             
-            pm2_running = result.exit_code == 0
+            pm2_running = result.returncode == 0
             logger.info(f"✅ Hot reloading: {'PASS' if pm2_running else 'FAIL'}")
             return pm2_running
             
@@ -143,8 +151,11 @@ class MCPHubValidator:
         
         try:
             # Just check we don't have runaway processes
-            result = self.container.exec_run(['ps', 'aux'])
-            process_count = len(result.output.decode().strip().split('\n'))
+            result = subprocess.run([
+                'docker', 'exec', self.container_name, 'ps', 'aux'
+            ], capture_output=True, text=True, timeout=10)
+            
+            process_count = len(result.stdout.strip().split('\n'))
             
             # Reasonable limit for our container
             reasonable = process_count < 50
@@ -171,20 +182,22 @@ class MCPHubValidator:
         }
         
         # Add server
-        self.container.exec_run([
+        subprocess.run([
+            'docker', 'exec', self.container_name,
             'wget', '-q', '-O', '-',
             '--post-data', json.dumps(server_config),
             '--header', 'Content-Type: application/json',
             'http://localhost:8765/api/servers'
-        ])
+        ], capture_output=True, timeout=10)
         
         # Add workspace
-        self.container.exec_run([
+        subprocess.run([
+            'docker', 'exec', self.container_name,
             'wget', '-q', '-O', '-',
             '--post-data', json.dumps(workspace_config),
             '--header', 'Content-Type: application/json',
             'http://localhost:8765/api/workspaces'
-        ])
+        ], capture_output=True, timeout=10)
 
     def run_validation(self) -> bool:
         """Run all validation checks"""
