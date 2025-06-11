@@ -1,0 +1,5 @@
+# Requirements for testing SSE endpoint with smolagents
+smolagents
+requests
+sseclient-py
+mcp

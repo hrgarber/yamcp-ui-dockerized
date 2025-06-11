@@ -758,7 +758,41 @@ app.get("/mcp/:workspaceName", (req, res) => {
     res.write(`event: info\ndata: {"message": "Restarting workspace ${workspaceName} due to new connection."}\n\n`);
   }
 
-  const mcpProcess = spawn('yamcp', ['run', workspaceName], { stdio: 'pipe' });
+  // WORKAROUND: Since yamcp CLI is broken, run MCP servers directly
+  // Get workspace configuration and run the first server directly
+  const workspaces = getRealWorkspaces();
+  const workspace = workspaces[workspaceName];
+  
+  if (!workspace || !workspace.length) {
+    res.write(`event: error\ndata: {"message": "Workspace ${workspaceName} not found or empty"}\n\n`);
+    res.end();
+    return;
+  }
+  
+  const providers = getRealProviders();
+  const firstServerName = workspace[0];
+  const serverConfig = providers[firstServerName];
+  
+  if (!serverConfig) {
+    res.write(`event: error\ndata: {"message": "Server ${firstServerName} not found"}\n\n`);
+    res.end();
+    return;
+  }
+  
+  // Run the server directly based on its configuration
+  let mcpProcess;
+  if (serverConfig.type === 'stdio') {
+    mcpProcess = spawn(serverConfig.providerParameters.command, 
+                      serverConfig.providerParameters.args || [], 
+                      { 
+                        stdio: 'pipe',
+                        env: { ...process.env, ...serverConfig.providerParameters.env }
+                      });
+  } else {
+    res.write(`event: error\ndata: {"message": "Only stdio servers supported currently"}\n\n`);
+    res.end();
+    return;
+  }
   activeMcpProcesses.set(workspaceName, mcpProcess);
 
   res.write(`event: info\ndata: {"message": "Attempting to start workspace: ${workspaceName}"}\n\n`);
