@@ -1,4 +1,0 @@
-smolagents[openai,mcp]
-pytest
-pytest-asyncio
-pytest-timeout
