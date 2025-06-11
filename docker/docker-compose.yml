@@ -1,6 +1,8 @@
 services:
   yamcp-ui:
-    build: .
+    build:
+      context: ..  # Build from parent directory
+      dockerfile: docker/Dockerfile
     container_name: yamcp-ui-dev
     ports:
       - "5173:5173"  # Vite dev server (frontend)
@@ -11,9 +13,9 @@ services:
       # Data persistence
       - yamcp-data:/root/.local/share/yamcp
       # Optional: Mount source for hot reloading (comment out if not needed)
-      - ./src:/app/src
-      - ./index.html:/app/index.html
-      - ./server.mjs:/app/server.mjs
+      - ../src:/app/src
+      - ../index.html:/app/index.html
+      - ../server.mjs:/app/server.mjs
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8765"]

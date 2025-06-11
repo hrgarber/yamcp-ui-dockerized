@@ -1,4 +1,6 @@
-# YAMCP UI Dashboard
+# YAMCP UI Dashboard - Dockerized
+
+> This is a dockerized fork of [yamcp-ui](https://github.com/eladcandroid/yamcp-ui) that runs in development mode, bypassing yamcp module compatibility issues.
 
 A beautiful web-based dashboard for [YAMCP (Yet Another MCP)](https://github.com/hamidra/yamcp) - A Model Context Protocol workspace manager.
 
@@ -19,7 +21,37 @@ YAMCP UI provides an intuitive web interface to manage your MCP servers, workspa
 - 🎨 **Modern UI**: Beautiful interface with dark/light mode support
 - 🔒 **Secure**: Localhost-only access with CORS protection
 
-## Installation & Usage
+## Docker Installation & Usage (Recommended)
+
+The easiest way to run YAMCP UI without dealing with dependencies:
+
+```bash
+# Clone this dockerized version
+git clone https://github.com/hrgarber/yamcp-ui-dockerized.git
+cd yamcp-ui-dockerized
+
+# Run with Docker
+cd docker
+docker-compose up -d
+```
+
+Access the application:
+- 🎨 **Frontend**: http://localhost:5173 (with hot reloading)
+- 🔧 **Backend API**: http://localhost:8765
+
+Stop the container:
+```bash
+docker-compose down
+```
+
+### Benefits of Docker Version
+- ✅ No yamcp installation required
+- ✅ No module compatibility issues
+- ✅ Hot reloading for development
+- ✅ Isolated environment
+- ✅ Easy to start and stop
+
+## Original Installation & Usage (Non-Docker)
 
 ```bash
 # Run directly with npx (recommended)
@@ -66,6 +98,7 @@ npm run dev
 npm run build
 ```
 
+
 ## Technology Stack
 
 - **Frontend**: React 18, TypeScript, Tailwind CSS
@@ -95,4 +128,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Support
 
-If you encounter any issues, please file them in the [GitHub Issues](https://github.com/eladcandroid/yamcp-ui/issues) section. 
+If you encounter any issues, please file them in the [GitHub Issues](https://github.com/eladcandroid/yamcp-ui/issues) section.
