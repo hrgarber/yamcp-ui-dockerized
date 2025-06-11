@@ -17,6 +17,11 @@ RUN npm ci
 # Copy all source files
 COPY . .
 
+# Create yamcp data directory and copy seed files
+RUN mkdir -p /root/.local/share/yamcp-nodejs
+COPY seed-data/providers.json /root/.local/share/yamcp-nodejs/providers.json
+COPY seed-data/workspaces.json /root/.local/share/yamcp-nodejs/workspaces.json
+
 # Expose both ports
 EXPOSE 5173 8765
 

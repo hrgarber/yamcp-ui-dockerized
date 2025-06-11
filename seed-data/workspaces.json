@@ -1,0 +1,10 @@
+{
+  "validation-workspace": {
+    "name": "validation-workspace",
+    "servers": ["validation-server"]
+  },
+  "context7-workspace": {
+    "name": "context7-workspace", 
+    "servers": ["context7"]
+  }
+}

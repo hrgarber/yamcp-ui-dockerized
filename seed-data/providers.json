@@ -1,0 +1,27 @@
+{
+  "validation-server": {
+    "namespace": "validation-server", 
+    "type": "stdio",
+    "providerParameters": {
+      "command": "echo",
+      "args": [
+        "VALIDATION_TEST"
+      ],
+      "env": {}
+    }
+  },
+  "context7": {
+    "namespace": "context7",
+    "type": "stdio", 
+    "providerParameters": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ],
+      "env": {
+        "DEFAULT_MINIMUM_TOKENS": "6000"
+      }
+    }
+  }
+}
