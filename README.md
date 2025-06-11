@@ -44,6 +44,27 @@ Stop the container:
 docker-compose down
 ```
 
+#### Building the Image Manually
+
+If you prefer to build the Docker image directly without using Docker Compose:
+
+```bash
+# Navigate to the project root directory (yamcp-ui-dockerized)
+docker build -t yamcp-ui-dev -f docker/Dockerfile .
+```
+
+Then you can run it using `docker run`, making sure to map ports and volumes as defined in the `docker-compose.yml`.
+For example:
+```bash
+docker run -d -p 5173:5173 -p 8765:8765 \
+  -v yamcp-ui-data:/root/.local/share/yamcp-nodejs \
+  -v $(pwd)/src:/app/src \
+  -v $(pwd)/index.html:/app/index.html \
+  -v $(pwd)/server.mjs:/app/server.mjs \
+  --name yamcp-ui-dev-manual yamcp-ui-dev
+```
+Note: `$(pwd)` assumes you are in the project root.
+
 ### Benefits of Docker Version
 - ✅ No yamcp installation required
 - ✅ No module compatibility issues
