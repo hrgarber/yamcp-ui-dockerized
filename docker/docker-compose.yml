@@ -5,8 +5,8 @@ services:
       dockerfile: docker/Dockerfile
     container_name: yamcp-ui-dev
     ports:
-      - "5173:5173"  # Vite dev server (frontend)
-      - "8765:8765"  # Express server (backend API)
+      - "0.0.0.0:5173:5173"  # Vite dev server (frontend)
+      - "0.0.0.0:8765:8765"  # Express server (backend API + MCP Hub SSE)
     environment:
       - NODE_ENV=development
     volumes:

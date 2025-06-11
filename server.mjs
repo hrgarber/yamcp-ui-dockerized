@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import { dirname } from "path";
 import cors from "cors";
 import envPaths from "env-paths";
+import { spawn } from "child_process";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -13,6 +14,9 @@ const app = express();
 // Default port 8765, can be overridden with PORT environment variable
 // Example: PORT=3000 npx yamcp-ui
 const PORT = process.env.PORT || 8765;
+
+// Store active MCP processes
+const activeMcpProcesses = new Map(); // Key: workspaceName, Value: child_process instance
 
 // Import YAMCP modules from global package
 // Helper function to safely import YAMCP modules
@@ -731,10 +735,97 @@ app.put("/api/config/workspaces", (req, res) => {
   }
 });
 
+// MCP Hub SSE Endpoint
+app.get("/mcp/:workspaceName", (req, res) => {
+  const { workspaceName } = req.params;
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('Access-Control-Allow-Origin', '*'); // Consider making this configurable
+  res.flushHeaders();
+
+  // Optional: Check if workspace actually exists using getRealWorkspaces()
+  // This requires getRealWorkspaces to be accessible here.
+  // If it's not, this check can be skipped, and `yamcp run` will fail if invalid.
+
+  if (activeMcpProcesses.has(workspaceName)) {
+    const oldProcess = activeMcpProcesses.get(workspaceName);
+    if (!oldProcess.killed) {
+      oldProcess.kill('SIGTERM');
+    }
+    activeMcpProcesses.delete(workspaceName);
+    res.write(`event: info\ndata: {"message": "Restarting workspace ${workspaceName} due to new connection."}\n\n`);
+  }
+
+  const mcpProcess = spawn('yamcp', ['run', workspaceName], { stdio: 'pipe' });
+  activeMcpProcesses.set(workspaceName, mcpProcess);
+
+  res.write(`event: info\ndata: {"message": "Attempting to start workspace: ${workspaceName}"}\n\n`);
+
+  mcpProcess.stdout.on('data', (data) => {
+    data.toString().split(/\r\n|\n|\r/).forEach(line => { // Handle different line endings
+      if (line.trim()) res.write(`data: ${line.trim()}\n\n`);
+    });
+  });
+
+  mcpProcess.stderr.on('data', (data) => {
+    data.toString().split(/\r\n|\n|\r/).forEach(line => {
+      if (line.trim()) res.write(`event: error\ndata: {"message": "stderr: ${line.trim()}"}\n\n`);
+    });
+  });
+
+  mcpProcess.on('error', (err) => {
+    console.error(`MCP process error for ${workspaceName}: ${err.message}`);
+    res.write(`event: error\ndata: {"message": "Failed to start workspace ${workspaceName}: ${err.message}"}\n\n`);
+    activeMcpProcesses.delete(workspaceName);
+    // Consider not ending res here to allow client to see the error and then handle disconnect
+  });
+
+  mcpProcess.on('close', (code) => {
+    console.log(`MCP process for ${workspaceName} exited with code ${code}.`);
+    res.write(`event: close\ndata: {"message": "Workspace ${workspaceName} connection closed. Exit code: ${code}"}\n\n`);
+    activeMcpProcesses.delete(workspaceName);
+    res.end(); // Essential to close the SSE stream from server-side
+  });
+
+  req.on('close', () => { // Client disconnected
+    console.log(`Client disconnected from SSE for workspace ${workspaceName}.`);
+    if (activeMcpProcesses.has(workspaceName)) {
+      const procToKill = activeMcpProcesses.get(workspaceName);
+      if (!procToKill.killed) {
+        procToKill.kill('SIGTERM');
+        console.log(`Killed MCP process for ${workspaceName} due to client disconnect.`);
+      }
+      activeMcpProcesses.delete(workspaceName);
+    }
+  });
+});
+
 // Catch all handler: send back React's index.html file for SPA routing
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
+
+// Graceful shutdown logic
+function gracefulShutdown(signal) {
+  console.log(`Received ${signal}. Shutting down MCP Hub gracefully...`);
+  activeMcpProcesses.forEach((proc, name) => {
+    if (!proc.killed) {
+      console.log(`Terminating MCP process for workspace: ${name}`);
+      proc.kill('SIGTERM');
+    }
+  });
+  // Allow a short time for processes to terminate
+  setTimeout(() => {
+    console.log('All active MCP processes signaled. Exiting main process.');
+    process.exit(0);
+  }, 1500); // Adjust as needed
+}
+
+// PM2 sends SIGINT. Docker stop sends SIGTERM.
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
 // Initialize and start server
 async function startServer() {
