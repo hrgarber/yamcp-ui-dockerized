@@ -4,17 +4,29 @@ A containerized Model Context Protocol (MCP) Hub that provides a web interface f
 
 ## 🚀 Quick Start
 
-```bash
-# Clone the repository
-git clone https://github.com/your-username/yamcp-ui-dockerized.git
-cd yamcp-ui-dockerized
+1.  **Clone the Repository:**
+    ```bash
+    git clone https://github.com/your-username/yamcp-ui-dockerized.git
+    cd yamcp-ui-dockerized
+    ```
 
-# Start the MCP Hub
-docker-compose up -d
+2.  **Build the Docker Image (Optional):**
+    If you want to build the image manually, for instance, to ensure no cache is used:
+    ```bash
+    docker build --no-cache -f docker/Dockerfile .
+    ```
+    *Note: `docker-compose up` (next step) will also build the image if it doesn't exist, using the settings in `docker-compose.yml`.*
 
-# Access the web interface
-open http://localhost:5173
-```
+3.  **Start the MCP Hub with Docker Compose:**
+    This command will build the image if it's not already built (unless you built it manually above) and start the services.
+    ```bash
+    docker compose up -d
+    ```
+
+4.  **Access the Web Interface:**
+    ```bash
+    open http://localhost:5173
+    ```
 
 ## 🎯 What This Does
 
