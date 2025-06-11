@@ -21,6 +21,7 @@ Our YAMCP-UI project has a working dashboard and Docker infrastructure, but the 
 
 ### 🏗️ Implementation Strategy
 - **[rethinking_mcp_hub_architecture.md](./rethinking_mcp_hub_architecture.md)** - Architecture options analysis
+- **[when_my_context_compacts.md](./when_my_context_compacts.md)** - Session continuity and current status summary
 - **[../upgrade_plan/immediate_steps.md](../upgrade_plan/immediate_steps.md)** - Phase 1 implementation roadmap
 - **[../upgrade_plan/supergateway_bridge_implementation.md](../upgrade_plan/supergateway_bridge_implementation.md)** - SuperGateway technical guide
 
@@ -125,7 +126,8 @@ app.get('/mcp/:workspace', async (req, res) => {
 ### For Implementation Planning
 1. **Start with [key_findings.md](./key_findings.md)** - Get executive summary and clear recommendations
 2. **Review [research_results.md](./research_results.md)** - Understand technical details and implementation patterns
-3. **Check [../upgrade_plan/immediate_steps.md](../upgrade_plan/immediate_steps.md)** - Get concrete next steps
+3. **Check [when_my_context_compacts.md](./when_my_context_compacts.md)** - Current status and session continuity
+4. **Follow [../upgrade_plan/immediate_steps.md](../upgrade_plan/immediate_steps.md)** - Get concrete next steps
 
 ### For Understanding the Problem
 1. **Read [01_vision_and_requirements.md](./01_vision_and_requirements.md)** - Understand user needs and success criteria
@@ -149,10 +151,11 @@ app.get('/mcp/:workspace', async (req, res) => {
 
 ## Quick Start for Next Developer
 
-1. **Read [key_findings.md](./key_findings.md)** to understand the FastMCP recommendation
-2. **Follow [../upgrade_plan/immediate_steps.md](../upgrade_plan/immediate_steps.md)** for concrete implementation steps
-3. **Reference [research_results.md](./research_results.md)** for FastMCP code examples
-4. **Test with existing smolagents setup** to validate aggregation works
+1. **Read [when_my_context_compacts.md](./when_my_context_compacts.md)** for current status and next steps
+2. **Review [key_findings.md](./key_findings.md)** to understand the FastMCP recommendation
+3. **Follow [../upgrade_plan/immediate_steps.md](../upgrade_plan/immediate_steps.md)** for concrete implementation steps
+4. **Reference [research_results.md](./research_results.md)** for FastMCP code examples
+5. **Test with existing smolagents setup** to validate aggregation works
 
 ## Success Criteria
 
@@ -169,3 +172,15 @@ app.get('/mcp/:workspace', async (req, res) => {
 - Clear documentation and maintenance procedures
 
 The FastMCP approach provides a clear, proven path to workspace aggregation with minimal custom development required.
+
+## For the Next AI/Developer
+
+**Start here**: [when_my_context_compacts.md](./when_my_context_compacts.md) → [key_findings.md](./key_findings.md) → [../upgrade_plan/immediate_steps.md](../upgrade_plan/immediate_steps.md)
+
+**Core insight**: FastMCP's `mount()` method solves workspace aggregation with automatic namespace management - exactly what we need.
+
+**Current status**: Research ✅ Planning ✅ Architecture ✅ → Ready for FastMCP prototype
+
+**Next action**: Add Python/FastMCP to Docker container and create prototype aggregator script.
+
+All documentation is organized, cross-referenced, and ready for implementation!
