@@ -1,0 +1,42 @@
+{
+  "agents": {
+    "contract": {
+      "status": "completed",
+      "current_task": null,
+      "completed_tasks": ["3.1", "3.2", "3.3", "3.4", "3.5"],
+      "blockers": [],
+      "branch": "wave3/contracts"
+    },
+    "python": {
+      "status": "starting",
+      "current_task": "1.1",
+      "completed_tasks": [],
+      "blockers": [],
+      "branch": "wave3/workspace"
+    },
+    "nodejs": {
+      "status": "starting",
+      "current_task": "2.1",
+      "completed_tasks": [],
+      "blockers": [],
+      "branch": "wave3/manager"
+    },
+    "frontend": {
+      "status": "ready",
+      "current_task": null,
+      "completed_tasks": [],
+      "blockers": [],
+      "branch": "wave3/ui"
+    },
+    "test": {
+      "status": "waiting",
+      "current_task": null,
+      "completed_tasks": [],
+      "blockers": ["needs implementation"],
+      "branch": "wave3/integration"
+    }
+  },
+  "phase": "1",
+  "started_at": "2025-01-23T10:00:00Z",
+  "last_updated": "2025-01-23T14:30:00Z"
+}

@@ -1,0 +1,176 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "WorkspaceConfiguration",
+  "description": "Configuration schema for MCP workspace aggregation",
+  "type": "object",
+  "required": ["workspace"],
+  "properties": {
+    "workspace": {
+      "type": "object",
+      "required": ["name", "servers"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique identifier for the workspace",
+          "pattern": "^[a-z0-9]([a-z0-9-]*[a-z0-9])?$",
+          "minLength": 1,
+          "maxLength": 63,
+          "examples": ["my-workspace", "dev-tools", "production-apis"]
+        },
+        "description": {
+          "type": "string",
+          "description": "Optional human-readable description of the workspace",
+          "maxLength": 500
+        },
+        "servers": {
+          "type": "array",
+          "description": "List of MCP servers to aggregate in this workspace",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {
+            "$ref": "#/definitions/server"
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "description": "Optional metadata for the workspace",
+          "additionalProperties": true
+        }
+      }
+    }
+  },
+  "definitions": {
+    "server": {
+      "type": "object",
+      "required": ["name", "command"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique name for this server within the workspace (used as namespace prefix)",
+          "pattern": "^[a-z0-9]([a-z0-9-]*[a-z0-9])?$",
+          "minLength": 1,
+          "maxLength": 32,
+          "examples": ["github", "filesystem", "slack"]
+        },
+        "command": {
+          "type": "string",
+          "description": "Command to execute for this MCP server",
+          "minLength": 1,
+          "examples": ["mcp-server-github", "mcp-server-filesystem", "node", "python"]
+        },
+        "args": {
+          "type": "array",
+          "description": "Arguments to pass to the server command",
+          "items": {
+            "type": "string",
+            "description": "Argument value, supports ${ENV_VAR} substitution"
+          },
+          "examples": [
+            ["--token", "${GITHUB_TOKEN}"],
+            ["--root", "/allowed/path"],
+            ["/app/server.js"]
+          ]
+        },
+        "env": {
+          "type": "object",
+          "description": "Environment variables specific to this server",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "examples": [{
+            "NODE_ENV": "production",
+            "LOG_LEVEL": "info"
+          }]
+        },
+        "retryPolicy": {
+          "type": "object",
+          "description": "Retry configuration for server initialization",
+          "properties": {
+            "maxAttempts": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10,
+              "default": 3,
+              "description": "Maximum number of initialization attempts"
+            },
+            "backoffMs": {
+              "type": "integer",
+              "minimum": 100,
+              "maximum": 60000,
+              "default": 1000,
+              "description": "Initial backoff time in milliseconds"
+            },
+            "maxBackoffMs": {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 300000,
+              "default": 30000,
+              "description": "Maximum backoff time in milliseconds"
+            }
+          }
+        },
+        "timeout": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 300000,
+          "default": 30000,
+          "description": "Server initialization timeout in milliseconds"
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "workspace": {
+        "name": "my-workspace",
+        "servers": [
+          {
+            "name": "github",
+            "command": "mcp-server-github",
+            "args": ["--token", "${GITHUB_TOKEN}"]
+          },
+          {
+            "name": "filesystem",
+            "command": "mcp-server-filesystem",
+            "args": ["--root", "/allowed/path"]
+          }
+        ]
+      }
+    },
+    {
+      "workspace": {
+        "name": "development-tools",
+        "description": "Development environment with code and documentation tools",
+        "servers": [
+          {
+            "name": "github",
+            "command": "mcp-server-github",
+            "args": ["--token", "${GITHUB_TOKEN}"],
+            "env": {
+              "LOG_LEVEL": "debug"
+            },
+            "retryPolicy": {
+              "maxAttempts": 5,
+              "backoffMs": 2000
+            }
+          },
+          {
+            "name": "filesystem",
+            "command": "mcp-server-filesystem",
+            "args": ["--root", "/workspace", "--readonly"],
+            "timeout": 60000
+          },
+          {
+            "name": "postgres",
+            "command": "mcp-server-postgres",
+            "args": ["--connection-string", "${DATABASE_URL}"]
+          }
+        ],
+        "metadata": {
+          "owner": "engineering-team",
+          "created": "2025-01-23"
+        }
+      }
+    }
+  ]
+}
