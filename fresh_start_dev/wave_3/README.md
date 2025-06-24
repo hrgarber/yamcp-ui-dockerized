@@ -47,6 +47,69 @@ wave_3/
     └── [config files]          # ESLint, Prettier, Jest, etc.
 ```
 
+## 🏗️ Architecture Overview
+
+```mermaid
+graph TB
+    subgraph "Browser"
+        UI[React UI<br/>WorkspacePublish<br/>WorkspaceStatus<br/>ConfigTemplates]
+    end
+
+    subgraph "Host Machine"
+        PROXY[Express Proxy<br/>:3000]
+        MANAGER[Manager Service<br/>:8080]
+        DOCKER[Docker Engine]
+    end
+
+    subgraph "Containers"
+        subgraph "Workspace A Container"
+            AGGR_A[FastMCP Aggregator<br/>:9001]
+            MCP_A1[GitHub MCP]
+            MCP_A2[FileSystem MCP]
+            MCP_A3[Slack MCP]
+            AGGR_A --> MCP_A1
+            AGGR_A --> MCP_A2
+            AGGR_A --> MCP_A3
+        end
+
+        subgraph "Workspace B Container"
+            AGGR_B[FastMCP Aggregator<br/>:9002]
+            MCP_B1[Database MCP]
+            MCP_B2[API Server MCP]
+            MCP_B3[Logger MCP]
+            AGGR_B --> MCP_B1
+            AGGR_B --> MCP_B2
+            AGGR_B --> MCP_B3
+        end
+    end
+
+    UI -->|HTTP API| PROXY
+    PROXY -->|Forward /api/*| MANAGER
+    MANAGER -->|Docker API| DOCKER
+    DOCKER -->|Create/Manage| AGGR_A
+    DOCKER -->|Create/Manage| AGGR_B
+
+    UI -.->|SSE Connection| AGGR_A
+    UI -.->|SSE Connection| AGGR_B
+
+    style UI fill:#3498db,color:#fff
+    style PROXY fill:#2c3e50,color:#fff
+    style MANAGER fill:#34495e,color:#fff
+    style DOCKER fill:#7f8c8d,color:#fff
+    style AGGR_A fill:#27ae60,color:#fff
+    style AGGR_B fill:#27ae60,color:#fff
+```
+
+### Key Architecture Points:
+- **UI** creates workspace configurations and manages workspaces through React components
+- **Express Proxy** forwards API calls from the UI to the Manager Service
+- **Manager Service** orchestrates Docker containers (the "Dumb Manager")
+- Each **Workspace Container** runs a FastMCP aggregator (the "Smart Workspace")
+- The aggregator mounts multiple MCP servers with namespace isolation
+- UI connects directly to workspace containers via SSE for MCP protocol communication
+
+This demonstrates the "Dumb Manager, Smart Workspace" pattern where the Manager only handles Docker orchestration while workspaces handle all MCP complexity.
+
 ## 🎯 Quick Navigation
 
 ### Understanding the Project
