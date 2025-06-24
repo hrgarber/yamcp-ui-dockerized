@@ -256,7 +256,6 @@ app.get("/api/servers", (req, res) => {
         name: key,
         namespace: provider.namespace || key,
         type: provider.type,
-        status: "stopped", // Default status - would need actual tracking
         ...(isStdio
           ? {
               command: provider.providerParameters.command,

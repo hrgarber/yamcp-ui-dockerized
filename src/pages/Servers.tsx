@@ -27,7 +27,6 @@ interface ServerData {
   name: string;
   namespace: string;
   type: "stdio" | "sse";
-  status: string;
   command?: string;
   args?: string[];
   env?: Record<string, string>;
@@ -110,34 +109,10 @@ export function Servers() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "running":
-        return <Badge className="bg-green-100 text-green-800">Running</Badge>;
-      case "stopped":
-        return <Badge variant="secondary">Stopped</Badge>;
-      case "error":
-        return <Badge variant="destructive">Error</Badge>;
-      default:
-        return <Badge variant="outline">Unknown</Badge>;
-    }
-  };
 
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Servers</h1>
-            <p className="text-muted-foreground">
-              Manage your MCP servers and their configurations
-            </p>
-          </div>
-          <Button disabled>
-            <Server className="mr-2 h-4 w-4" />
-            Add Server
-          </Button>
-        </div>
         <Card>
           <CardHeader>
             <CardTitle>MCP Servers</CardTitle>
@@ -161,32 +136,27 @@ export function Servers() {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Servers</h1>
-            <p className="text-muted-foreground">
-              Manage your MCP servers and their configurations
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setShowJsonEditor(true)}>
-              <FileText className="mr-2 h-4 w-4" />
-              Edit providers.json
-            </Button>
-            <Button onClick={handleAddServer}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Server
-            </Button>
-          </div>
-        </div>
-
         <Card>
           <CardHeader>
-            <CardTitle>MCP Servers</CardTitle>
-            <CardDescription>
-              All configured Model Context Protocol servers ({servers.length}{" "}
-              total)
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>MCP Servers</CardTitle>
+                <CardDescription>
+                  All configured Model Context Protocol servers ({servers.length}{" "}
+                  total)
+                </CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setShowJsonEditor(true)}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  Edit providers.json
+                </Button>
+                <Button onClick={handleAddServer}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Server
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {servers.length === 0 ? (
@@ -212,7 +182,6 @@ export function Servers() {
                     <TableHead>Name</TableHead>
                     <TableHead>Namespace</TableHead>
                     <TableHead>Type</TableHead>
-                    <TableHead>Status</TableHead>
                     <TableHead>Configuration</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -229,7 +198,6 @@ export function Servers() {
                       <TableCell>
                         <Badge variant="outline">{server.type}</Badge>
                       </TableCell>
-                      <TableCell>{getStatusBadge(server.status)}</TableCell>
                       <TableCell className="max-w-xs truncate">
                         {server.type === "stdio"
                           ? `${server.command}${

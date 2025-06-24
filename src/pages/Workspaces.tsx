@@ -131,18 +131,6 @@ export function Workspaces() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Workspaces</h1>
-            <p className="text-muted-foreground">
-              Manage your server workspaces and configurations
-            </p>
-          </div>
-          <Button disabled>
-            <FolderOpen className="mr-2 h-4 w-4" />
-            Create Workspace
-          </Button>
-        </div>
         <Card>
           <CardHeader>
             <CardTitle>Workspaces</CardTitle>
@@ -166,32 +154,27 @@ export function Workspaces() {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Workspaces</h1>
-            <p className="text-muted-foreground">
-              Manage your server workspaces and configurations
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setShowJsonEditor(true)}>
-              <FileText className="mr-2 h-4 w-4" />
-              Edit workspaces.json
-            </Button>
-            <Button onClick={handleCreateWorkspace}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Workspace
-            </Button>
-          </div>
-        </div>
-
         <Card>
           <CardHeader>
-            <CardTitle>Workspaces</CardTitle>
-            <CardDescription>
-              Grouped server configurations for different use cases (
-              {workspaces.length} total)
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Workspaces</CardTitle>
+                <CardDescription>
+                  Grouped server configurations for different use cases (
+                  {workspaces.length} total)
+                </CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setShowJsonEditor(true)}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  Edit workspaces.json
+                </Button>
+                <Button onClick={handleCreateWorkspace}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Workspace
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {workspaces.length === 0 ? (

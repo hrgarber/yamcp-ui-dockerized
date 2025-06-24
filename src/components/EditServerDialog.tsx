@@ -24,7 +24,6 @@ interface ServerData {
   name: string;
   namespace: string;
   type: "stdio" | "sse";
-  status: string;
   command?: string;
   args?: string[];
   env?: Record<string, string>;

@@ -8,9 +8,16 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ClearLogsDialog } from "@/components/ClearLogsDialog";
 import { LogDetailsDialog } from "@/components/LogDetailsDialog";
-import { FileText, Download, Trash2, RefreshCw, Eye } from "lucide-react";
+import { FileText, Download, Trash2, RefreshCw, Eye, Filter } from "lucide-react";
 
 interface LogEntry {
   id: string;
@@ -35,6 +42,8 @@ export function Logs() {
   const [showClearDialog, setShowClearDialog] = useState(false);
   const [showLogDetails, setShowLogDetails] = useState(false);
   const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null);
+  const [selectedWorkspace, setSelectedWorkspace] = useState<string>("all");
+  const [selectedLevel, setSelectedLevel] = useState<string>("all");
 
   useEffect(() => {
     fetchLogs();
@@ -119,7 +128,8 @@ export function Logs() {
   };
 
   const getLevelBadge = (level: string) => {
-    switch (level) {
+    const normalizedLevel = level.toLowerCase();
+    switch (normalizedLevel) {
       case "error":
         return <Badge variant="destructive">Error</Badge>;
       case "warn":
@@ -146,31 +156,49 @@ export function Logs() {
     return new Date(dateString).toLocaleString();
   };
 
+  // Get unique workspaces from logs
+  const getUniqueWorkspaces = () => {
+    const workspaces = Array.from(new Set(logs.map(log => log.server)));
+    return workspaces.sort();
+  };
+
+  // Filter logs based on workspace and level
+  const getFilteredLogs = () => {
+    let filtered = logs;
+    
+    if (selectedWorkspace !== "all") {
+      filtered = filtered.filter(log => log.server === selectedWorkspace);
+    }
+    
+    if (selectedLevel !== "all") {
+      filtered = filtered.filter(log => {
+        const logLevel = (log.level || "").toLowerCase().trim();
+        const filterLevel = selectedLevel.toLowerCase().trim();
+        return logLevel === filterLevel;
+      });
+    }
+    
+    return filtered;
+  };
+
+  // Group logs by workspace
+  const getGroupedLogs = () => {
+    const filtered = getFilteredLogs();
+    const grouped: Record<string, LogEntry[]> = {};
+    
+    filtered.forEach(log => {
+      if (!grouped[log.server]) {
+        grouped[log.server] = [];
+      }
+      grouped[log.server].push(log);
+    });
+    
+    return grouped;
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Logs</h1>
-            <p className="text-muted-foreground">
-              View server logs and system events
-            </p>
-          </div>
-          <div className="flex space-x-2">
-            <Button variant="outline" disabled>
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Refresh
-            </Button>
-            <Button variant="outline" disabled>
-              <Download className="mr-2 h-4 w-4" />
-              Export
-            </Button>
-            <Button variant="outline" disabled>
-              <Trash2 className="mr-2 h-4 w-4" />
-              Clear
-            </Button>
-          </div>
-        </div>
         <Card>
           <CardHeader>
             <CardTitle>System Logs</CardTitle>
@@ -193,77 +221,157 @@ export function Logs() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Logs</h1>
-          <p className="text-muted-foreground">
-            View server logs and system events
-          </p>
-        </div>
-        <div className="flex space-x-2">
-          <Button
-            variant="outline"
-            onClick={handleRefresh}
-            disabled={refreshing}
-          >
-            <RefreshCw
-              className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
-            />
-            Refresh
-          </Button>
-          <Button variant="outline" onClick={handleExport}>
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-          <Button variant="outline" onClick={handleClearLogs}>
-            <Trash2 className="mr-2 h-4 w-4" />
-            Clear
-          </Button>
-        </div>
-      </div>
-
       <Card>
         <CardHeader>
-          <CardTitle>System Logs</CardTitle>
-          <CardDescription>
-            Recent server events and error messages ({logs.length} entries)
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>System Logs</CardTitle>
+              <CardDescription>
+                Recent server events and error messages ({getFilteredLogs().length} entries)
+              </CardDescription>
+            </div>
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                onClick={handleRefresh}
+                disabled={refreshing}
+              >
+                <RefreshCw
+                  className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+                />
+                Refresh
+              </Button>
+              <Button variant="outline" onClick={handleExport}>
+                <Download className="mr-2 h-4 w-4" />
+                Export
+              </Button>
+              <Button variant="outline" onClick={handleClearLogs}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Clear
+              </Button>
+            </div>
+          </div>
+          
+          {/* Filters */}
+          <div className="flex items-center space-x-4 pt-4">
+            <div className="flex items-center space-x-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Filters:</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <label className="text-sm text-muted-foreground">Workspace:</label>
+              <Select value={selectedWorkspace} onValueChange={setSelectedWorkspace}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Workspaces</SelectItem>
+                  {getUniqueWorkspaces().map(workspace => (
+                    <SelectItem key={workspace} value={workspace}>
+                      {workspace}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center space-x-2">
+              <label className="text-sm text-muted-foreground">Level:</label>
+              <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Levels</SelectItem>
+                  <SelectItem value="error">Error</SelectItem>
+                  <SelectItem value="warn">Warning</SelectItem>
+                  <SelectItem value="info">Info</SelectItem>
+                  <SelectItem value="debug">Debug</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-6">
             {logs.length > 0 ? (
-              logs.map((log) => (
-                <div
-                  key={log.id}
-                  className="flex items-start space-x-4 p-4 border rounded-lg"
-                >
-                  <div className="flex-shrink-0">
-                    {getLevelBadge(log.level)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm font-medium">{log.server}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {formatDate(log.timestamp)}
-                      </span>
+              selectedWorkspace === "all" ? (
+                // Show grouped by workspace when "All Workspaces" is selected
+                Object.entries(getGroupedLogs()).map(([workspaceName, workspaceLogs]) => (
+                  <div key={workspaceName} className="space-y-3">
+                    <div className="flex items-center space-x-2 border-b pb-2">
+                      <h4 className="font-semibold text-lg">{workspaceName}</h4>
+                      <Badge variant="outline">{workspaceLogs.length} entries</Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {log.message}
-                    </p>
+                    <div className="space-y-3 pl-4">
+                      {workspaceLogs.map((log) => (
+                        <div
+                          key={log.id}
+                          className="flex items-start space-x-4 p-4 bg-muted/50 rounded-lg"
+                        >
+                          <div className="flex-shrink-0">
+                            {getLevelBadge(log.level)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-xs text-muted-foreground">
+                                {formatDate(log.timestamp)}
+                              </span>
+                            </div>
+                            <p className="text-sm text-foreground mt-1">
+                              {log.message}
+                            </p>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewLogDetails(log)}
+                              className="gap-2"
+                            >
+                              <Eye className="h-4 w-4" />
+                              View
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex-shrink-0">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleViewLogDetails(log)}
-                      className="gap-2"
-                    >
-                      <Eye className="h-4 w-4" />
-                      View
-                    </Button>
+                ))
+              ) : (
+                // Show flat list when specific workspace is selected
+                getFilteredLogs().map((log) => (
+                  <div
+                    key={log.id}
+                    className="flex items-start space-x-4 p-4 bg-muted/50 rounded-lg"
+                  >
+                    <div className="flex-shrink-0">
+                      {getLevelBadge(log.level)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm font-medium">{log.server}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {formatDate(log.timestamp)}
+                        </span>
+                      </div>
+                      <p className="text-sm text-foreground mt-1">
+                        {log.message}
+                      </p>
+                    </div>
+                    <div className="flex-shrink-0">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewLogDetails(log)}
+                        className="gap-2"
+                      >
+                        <Eye className="h-4 w-4" />
+                        View
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              ))
+                ))
+              )
             ) : (
               <div className="text-center py-8">
                 <FileText className="mx-auto h-12 w-12 text-gray-400" />
@@ -293,7 +401,7 @@ export function Logs() {
               {logFiles.map((logFile) => (
                 <div
                   key={`${logFile.name}-${logFile.modified}`}
-                  className="flex items-center justify-between p-3 border rounded-lg"
+                  className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
                 >
                   <div className="flex items-center space-x-3">
                     <FileText className="h-5 w-5 text-muted-foreground" />
