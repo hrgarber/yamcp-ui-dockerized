@@ -1,6 +1,13 @@
 import Docker from 'dockerode';
 import winston from 'winston';
-import { createErrorResponse } from '../shared/error-codes.js';
+
+// Import error handling - we'll create a local helper for now
+const createErrorResponse = (code, data = null) => {
+  const error = new Error(code);
+  error.code = code;
+  error.data = data;
+  return error;
+};
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
@@ -70,34 +77,61 @@ export class DockerClient {
   /**
    * Clean up orphaned workspace containers
    */
-  async cleanupOrphans() {
+  async cleanupOrphans(trackedWorkspaceIds = []) {
     try {
       const containers = await this.docker.listContainers({ all: true });
       const workspaceContainers = containers.filter(container =>
         container.Names.some(name => name.startsWith(`/${this.containerPrefix}`))
       );
 
+      const trackedSet = new Set(trackedWorkspaceIds);
       let cleaned = 0;
+      let preserved = 0;
+
       for (const containerInfo of workspaceContainers) {
         try {
+          // Extract workspace ID from container name
+          const containerName = containerInfo.Names[0];
+          const workspaceId = containerName.substring(`/${this.containerPrefix}`.length);
+          
+          // Check if this container is tracked
+          if (trackedSet.has(workspaceId)) {
+            preserved++;
+            logger.debug(`Preserved tracked container: ${containerName}`);
+            continue;
+          }
+          
+          // Check container age - don't remove containers created in the last 5 minutes
+          const created = new Date(containerInfo.Created * 1000);
+          const ageMinutes = (Date.now() - created.getTime()) / (1000 * 60);
+          
+          if (ageMinutes < 5) {
+            logger.info(`Skipping recently created container: ${containerName} (${ageMinutes.toFixed(1)} minutes old)`);
+            continue;
+          }
+          
+          // This is an orphaned container
+          logger.info(`Found orphaned container: ${containerName} (${containerInfo.State})`);
+          
           const container = this.docker.getContainer(containerInfo.Id);
           
           // Stop if running
           if (containerInfo.State === 'running') {
+            logger.info(`Stopping orphaned container: ${containerName}`);
             await container.stop({ t: 10 });
           }
           
           // Remove container
           await container.remove({ force: true });
           cleaned++;
-          logger.info(`Removed orphaned container: ${containerInfo.Names[0]}`);
+          logger.info(`Removed orphaned container: ${containerName}`);
         } catch (error) {
           logger.warn(`Failed to cleanup container ${containerInfo.Id}:`, error.message);
         }
       }
 
-      if (cleaned > 0) {
-        logger.info(`Cleaned up ${cleaned} orphaned containers`);
+      if (cleaned > 0 || preserved > 0) {
+        logger.info(`Container cleanup complete: ${cleaned} removed, ${preserved} preserved`);
       }
     } catch (error) {
       logger.error('Failed to cleanup orphans:', error);

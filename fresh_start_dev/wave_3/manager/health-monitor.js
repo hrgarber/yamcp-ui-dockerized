@@ -16,11 +16,13 @@ export class HealthMonitor {
     this.dockerClient = dockerClient;
     this.checkInterval = parseInt(options.checkInterval || process.env.HEALTH_CHECK_INTERVAL || '30000');
     this.checkTimeout = parseInt(options.checkTimeout || process.env.HEALTH_CHECK_TIMEOUT || '5000');
-    this.maxRestartAttempts = parseInt(options.maxRestartAttempts || process.env.MAX_RESTART_ATTEMPTS || '3');
-    this.restartBackoff = parseInt(options.restartBackoff || process.env.RESTART_BACKOFF_MS || '5000');
+    this.maxRestartAttempts = parseInt(options.maxRestartAttempts || process.env.MAX_RESTART_ATTEMPTS || '5');
+    this.initialBackoff = parseInt(options.initialBackoff || process.env.INITIAL_BACKOFF_MS || '1000');
+    this.maxBackoff = parseInt(options.maxBackoff || process.env.MAX_BACKOFF_MS || '60000');
     
-    this.workspaces = new Map(); // workspaceId -> { port, restartCount, lastCheck }
+    this.workspaces = new Map(); // workspaceId -> { port, restartCount, lastCheck, failureCount, lastRestart }
     this.cronJob = null;
+    this.isChecking = false;
   }
 
   /**
@@ -63,8 +65,10 @@ export class HealthMonitor {
       restartCount: 0,
       lastCheck: null,
       status: 'unknown',
+      failureCount: 0,
+      lastRestart: null,
     });
-    logger.info(`Added workspace ${workspaceId} to health monitoring`);
+    logger.info(`Added workspace ${workspaceId} to health monitoring on port ${port}`);
   }
 
   /**
@@ -79,13 +83,24 @@ export class HealthMonitor {
    * Check health of all workspaces
    */
   async checkAllWorkspaces() {
-    const promises = [];
-    
-    for (const [workspaceId, info] of this.workspaces) {
-      promises.push(this.checkWorkspace(workspaceId, info));
+    if (this.isChecking) {
+      logger.debug('Health check already in progress, skipping');
+      return;
     }
+    
+    this.isChecking = true;
+    
+    try {
+      const promises = [];
+      
+      for (const [workspaceId, info] of this.workspaces) {
+        promises.push(this.checkWorkspace(workspaceId, info));
+      }
 
-    await Promise.allSettled(promises);
+      await Promise.allSettled(promises);
+    } finally {
+      this.isChecking = false;
+    }
   }
 
   /**
@@ -98,14 +113,26 @@ export class HealthMonitor {
       
       if (healthy) {
         info.status = 'healthy';
-        info.restartCount = 0; // Reset restart count on successful check
+        info.failureCount = 0; // Reset failure count on successful check
+        
+        // Reset restart count if enough time has passed since last restart
+        if (info.lastRestart) {
+          const timeSinceRestart = Date.now() - info.lastRestart.getTime();
+          if (timeSinceRestart > 300000) { // 5 minutes
+            info.restartCount = 0;
+            logger.debug(`Reset restart count for workspace ${workspaceId} after stable operation`);
+          }
+        }
       } else {
         info.status = 'unhealthy';
+        info.failureCount++;
+        logger.warn(`Workspace ${workspaceId} is unhealthy (failure count: ${info.failureCount})`);
         await this.handleUnhealthyWorkspace(workspaceId, info);
       }
     } catch (error) {
       logger.error(`Health check failed for workspace ${workspaceId}:`, error);
       info.status = 'error';
+      info.failureCount++;
       await this.handleUnhealthyWorkspace(workspaceId, info);
     }
   }
@@ -134,25 +161,77 @@ export class HealthMonitor {
    * Handle unhealthy workspace with restart logic
    */
   async handleUnhealthyWorkspace(workspaceId, info) {
+    // Only restart after multiple consecutive failures
+    if (info.failureCount < 2) {
+      logger.debug(`Workspace ${workspaceId} failure count below threshold, waiting for next check`);
+      return;
+    }
+    
     if (info.restartCount >= this.maxRestartAttempts) {
-      logger.error(`Workspace ${workspaceId} exceeded max restart attempts`);
+      logger.error(`Workspace ${workspaceId} exceeded max restart attempts (${this.maxRestartAttempts})`);
       info.status = 'failed';
+      
+      // Emit event or notification about failed workspace
+      this.notifyWorkspaceFailed(workspaceId, info);
       return;
     }
 
     info.restartCount++;
-    logger.warn(`Attempting restart ${info.restartCount}/${this.maxRestartAttempts} for workspace ${workspaceId}`);
+    
+    // Calculate exponential backoff: 1s, 2s, 4s, 8s, 16s, 32s, max 60s
+    const backoff = Math.min(
+      this.initialBackoff * Math.pow(2, info.restartCount - 1),
+      this.maxBackoff
+    );
+    
+    logger.warn(`Scheduling restart ${info.restartCount}/${this.maxRestartAttempts} for workspace ${workspaceId} in ${backoff}ms`);
 
-    // Apply exponential backoff
-    const backoff = this.restartBackoff * Math.pow(2, info.restartCount - 1);
-    await new Promise((resolve) => setTimeout(resolve, backoff));
-
-    try {
-      await this.dockerClient.restartWorkspace(workspaceId);
-      logger.info(`Successfully restarted workspace ${workspaceId}`);
-    } catch (error) {
-      logger.error(`Failed to restart workspace ${workspaceId}:`, error);
-    }
+    // Schedule restart with backoff
+    setTimeout(async () => {
+      try {
+        logger.info(`Restarting workspace ${workspaceId} (attempt ${info.restartCount}/${this.maxRestartAttempts})`);
+        await this.dockerClient.restartWorkspace(workspaceId);
+        
+        info.lastRestart = new Date();
+        info.failureCount = 0; // Reset failure count after restart
+        logger.info(`Successfully restarted workspace ${workspaceId}`);
+        
+        // Perform immediate health check after restart
+        setTimeout(() => {
+          this.checkWorkspace(workspaceId, info).catch(err => {
+            logger.error(`Post-restart health check failed for ${workspaceId}:`, err);
+          });
+        }, 5000); // Wait 5 seconds for container to stabilize
+        
+      } catch (error) {
+        logger.error(`Failed to restart workspace ${workspaceId}:`, error);
+        info.status = 'restart-failed';
+        
+        // If restart fails, it counts as another failure
+        if (error.code === 'DOCKER_CONTAINER_NOT_FOUND') {
+          // Container doesn't exist, remove from monitoring
+          this.removeWorkspace(workspaceId);
+          logger.info(`Removed non-existent workspace ${workspaceId} from monitoring`);
+        }
+      }
+    }, backoff);
+  }
+  
+  /**
+   * Notify about failed workspace (for external integrations)
+   */
+  notifyWorkspaceFailed(workspaceId, info) {
+    logger.error(`WORKSPACE FAILED: ${workspaceId}`, {
+      workspaceId,
+      port: info.port,
+      restartCount: info.restartCount,
+      failureCount: info.failureCount,
+      lastCheck: info.lastCheck,
+      lastRestart: info.lastRestart,
+    });
+    
+    // TODO: Emit event or call webhook for external notification
+    // this.emit('workspace:failed', { workspaceId, info });
   }
 
   /**
@@ -166,6 +245,8 @@ export class HealthMonitor {
         status: info.status,
         lastCheck: info.lastCheck,
         restartCount: info.restartCount,
+        failureCount: info.failureCount,
+        lastRestart: info.lastRestart,
         port: info.port,
       };
     }
@@ -186,6 +267,8 @@ export class HealthMonitor {
       status: info.status,
       lastCheck: info.lastCheck,
       restartCount: info.restartCount,
+      failureCount: info.failureCount,
+      lastRestart: info.lastRestart,
       port: info.port,
     };
   }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { workspaceManager, WorkspaceConfig, PublishResult } from '../services/workspace-manager';
 
 export interface WorkspacePublishProps {
@@ -18,6 +18,25 @@ export const WorkspacePublish: React.FC<WorkspacePublishProps> = ({
 }) => {
   const [isPublishing, setIsPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [isValidating, setIsValidating] = useState(false);
+
+  // Validate config whenever it changes
+  useEffect(() => {
+    const validateConfiguration = async () => {
+      setIsValidating(true);
+      try {
+        const validation = await workspaceManager.validateConfig(config);
+        setValidationErrors(validation.errors || []);
+      } catch (err) {
+        setValidationErrors(['Failed to validate configuration']);
+      } finally {
+        setIsValidating(false);
+      }
+    };
+
+    validateConfiguration();
+  }, [config]);
 
   const handlePublish = async () => {
     setIsPublishing(true);
@@ -49,15 +68,37 @@ export const WorkspacePublish: React.FC<WorkspacePublishProps> = ({
     }
   };
 
+  const hasValidationErrors = validationErrors.length > 0;
+  const isDisabled = disabled || isPublishing || isValidating || hasValidationErrors;
+
   return (
     <div className={`workspace-publish ${className}`}>
+      {hasValidationErrors && (
+        <div className="validation-errors" role="alert">
+          <h4 className="validation-title">Configuration Errors:</h4>
+          <ul className="validation-list">
+            {validationErrors.map((error, index) => (
+              <li key={index} className="validation-error">
+                {error}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      
       <button
         onClick={handlePublish}
-        disabled={disabled || isPublishing}
-        className={`publish-button ${isPublishing ? 'publishing' : ''}`}
+        disabled={isDisabled}
+        className={`publish-button ${isPublishing ? 'publishing' : ''} ${hasValidationErrors ? 'invalid' : ''}`}
         aria-label="Publish workspace"
+        title={hasValidationErrors ? 'Fix configuration errors before publishing' : 'Publish workspace'}
       >
-        {isPublishing ? (
+        {isValidating ? (
+          <>
+            <span className="spinner" aria-hidden="true">⟳</span>
+            Validating...
+          </>
+        ) : isPublishing ? (
           <>
             <span className="spinner" aria-hidden="true">⟳</span>
             Publishing...
@@ -129,6 +170,42 @@ const styles = `
     border-radius: 4px;
     color: #c00;
     font-size: 14px;
+  }
+
+  .publish-button.invalid {
+    background-color: #6c757d;
+    cursor: not-allowed;
+  }
+
+  .validation-errors {
+    margin-bottom: 12px;
+    padding: 12px;
+    background-color: #fee;
+    border: 1px solid #fcc;
+    border-radius: 4px;
+  }
+
+  .validation-title {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #c00;
+  }
+
+  .validation-list {
+    margin: 0;
+    padding-left: 20px;
+    list-style-type: disc;
+  }
+
+  .validation-error {
+    color: #c00;
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+
+  .validation-error:last-child {
+    margin-bottom: 0;
   }
 `;
 

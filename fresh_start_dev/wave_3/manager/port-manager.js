@@ -2,7 +2,13 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import portfinder from 'portfinder';
 import winston from 'winston';
-import { createErrorResponse } from '../shared/error-codes.js';
+// Import error handling - we'll create a local helper for now
+const createErrorResponse = (code, data = null) => {
+  const error = new Error(code);
+  error.code = code;
+  error.data = data;
+  return error;
+};
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
@@ -42,31 +48,138 @@ export class PortManager {
     try {
       const data = await fs.readFile(this.storageFile, 'utf8');
       const allocations = JSON.parse(data);
+      
+      // Validate the loaded data
+      if (!this.validateAllocations(allocations)) {
+        throw new Error('Invalid port allocations data structure');
+      }
+      
       this.allocations = new Map(Object.entries(allocations));
       logger.info(`Loaded ${this.allocations.size} port allocations`);
     } catch (error) {
-      if (error.code !== 'ENOENT') {
-        throw error;
+      if (error.code === 'ENOENT') {
+        // File doesn't exist, start with empty allocations
+        this.allocations = new Map();
+        return;
       }
-      // File doesn't exist, start with empty allocations
-      this.allocations = new Map();
+      
+      // Handle corrupted file or invalid JSON
+      logger.error('Failed to load port allocations:', error);
+      
+      // Try to restore from backup
+      try {
+        await this.restoreFromBackup();
+        logger.info('Successfully restored from backup after load failure');
+      } catch (backupError) {
+        logger.warn('No valid backup available, starting with empty allocations');
+        this.allocations = new Map();
+        
+        // Move corrupted file aside
+        try {
+          const corruptedFile = `${this.storageFile}.corrupted.${Date.now()}`;
+          await fs.rename(this.storageFile, corruptedFile);
+          logger.info(`Moved corrupted file to ${corruptedFile}`);
+        } catch (moveError) {
+          logger.warn('Failed to move corrupted file:', moveError);
+        }
+      }
     }
   }
 
   /**
-   * Save port allocations to storage
+   * Save port allocations to storage with atomic writes
    */
   async saveAllocations() {
     try {
       const data = Object.fromEntries(this.allocations);
-      await fs.writeFile(this.storageFile, JSON.stringify(data, null, 2));
-      logger.info('Port allocations saved');
+      const jsonData = JSON.stringify(data, null, 2);
+      
+      // Create backup before saving
+      await this.createBackup();
+      
+      // Use atomic write: write to temp file then rename
+      const tempFile = `${this.storageFile}.tmp`;
+      await fs.writeFile(tempFile, jsonData);
+      
+      // Rename is atomic on most filesystems
+      await fs.rename(tempFile, this.storageFile);
+      
+      logger.info('Port allocations saved atomically');
     } catch (error) {
       logger.error('Failed to save port allocations:', error);
+      
+      // Try to restore from backup if save failed
+      try {
+        await this.restoreFromBackup();
+        logger.info('Restored port allocations from backup');
+      } catch (backupError) {
+        logger.error('Failed to restore from backup:', backupError);
+      }
+      
       throw createErrorResponse('PORT_STORAGE_FAILED', {
         error: error.message,
       });
     }
+  }
+  
+  /**
+   * Create backup of current port allocations
+   */
+  async createBackup() {
+    try {
+      const backupFile = `${this.storageFile}.backup`;
+      
+      // Check if main file exists before backing up
+      try {
+        await fs.access(this.storageFile);
+        await fs.copyFile(this.storageFile, backupFile);
+        logger.debug('Created port allocations backup');
+      } catch (error) {
+        if (error.code !== 'ENOENT') {
+          throw error;
+        }
+        // Main file doesn't exist, nothing to backup
+      }
+    } catch (error) {
+      logger.warn('Failed to create backup:', error);
+      // Don't fail the save operation if backup fails
+    }
+  }
+  
+  /**
+   * Restore port allocations from backup
+   */
+  async restoreFromBackup() {
+    const backupFile = `${this.storageFile}.backup`;
+    
+    try {
+      await fs.access(backupFile);
+      await fs.copyFile(backupFile, this.storageFile);
+      await this.loadAllocations();
+      logger.info('Restored port allocations from backup');
+    } catch (error) {
+      throw new Error(`No backup available: ${error.message}`);
+    }
+  }
+  
+  /**
+   * Validate port allocations data structure
+   */
+  validateAllocations(data) {
+    if (typeof data !== 'object' || data === null) {
+      return false;
+    }
+    
+    for (const [workspaceId, port] of Object.entries(data)) {
+      if (typeof workspaceId !== 'string' || workspaceId.length === 0) {
+        return false;
+      }
+      if (!Number.isInteger(port) || port < this.startPort || port > this.endPort) {
+        return false;
+      }
+    }
+    
+    return true;
   }
 
   /**

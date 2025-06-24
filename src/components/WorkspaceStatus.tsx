@@ -23,14 +23,25 @@ export const WorkspaceStatus: React.FC<WorkspaceStatusProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
+  const [configChanged, setConfigChanged] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const mountedRef = useRef(true);
+  const previousConfigRef = useRef<WorkspaceConfig | null>(null);
 
   const fetchStatus = async () => {
     try {
       const latestStatus = await workspaceManager.getStatus(workspaceId);
       
       if (mountedRef.current) {
+        // Check if config has changed
+        if (previousConfigRef.current && latestStatus.state === 'running') {
+          const configDiff = JSON.stringify(previousConfigRef.current) !== JSON.stringify(latestStatus.config);
+          setConfigChanged(configDiff);
+        }
+        previousConfigRef.current = latestStatus.config;
+
         setStatus(latestStatus);
         setError(null);
         setLoading(false);
@@ -76,6 +87,23 @@ export const WorkspaceStatus: React.FC<WorkspaceStatusProps> = ({
       setError(err instanceof Error ? err.message : 'Failed to delete workspace');
       setIsDeleting(false);
     }
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    setConfigChanged(false);
+    await fetchStatus();
+    setIsRefreshing(false);
   };
 
   const getStatusBadgeClass = (state: WorkspaceStatusType['state']) => {
@@ -142,6 +170,21 @@ export const WorkspaceStatus: React.FC<WorkspaceStatusProps> = ({
         </div>
       </div>
 
+      {configChanged && (
+        <div className="config-warning">
+          <span className="warning-icon">⚠️</span>
+          <span className="warning-text">Configuration outdated</span>
+          <button 
+            onClick={handleRefresh} 
+            className="refresh-button"
+            disabled={isRefreshing}
+            aria-label="Refresh workspace with new configuration"
+          >
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
+        </div>
+      )}
+
       <div className="status-details">
         <div className="detail-row">
           <span className="detail-label">ID:</span>
@@ -151,7 +194,43 @@ export const WorkspaceStatus: React.FC<WorkspaceStatusProps> = ({
         {status.port && (
           <div className="detail-row">
             <span className="detail-label">Port:</span>
-            <span className="detail-value">{status.port}</span>
+            <span className="detail-value port-value">
+              {status.port}
+              {status.state === 'running' && (
+                <button
+                  onClick={() => copyToClipboard(String(status.port))}
+                  className="copy-button"
+                  aria-label="Copy port number"
+                  title="Copy port"
+                >
+                  {copySuccess ? '✓' : '📋'}
+                </button>
+              )}
+            </span>
+          </div>
+        )}
+
+        {status.state === 'running' && status.port && (
+          <div className="detail-row">
+            <span className="detail-label">Connection URL:</span>
+            <span className="detail-value url-container">
+              <a 
+                href={`http://localhost:${status.port}/sse`} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="connection-url"
+              >
+                {`http://localhost:${status.port}/sse`}
+              </a>
+              <button
+                onClick={() => copyToClipboard(`http://localhost:${status.port}/sse`)}
+                className="copy-button"
+                aria-label="Copy connection URL"
+                title="Copy URL"
+              >
+                {copySuccess ? '✓' : '📋'}
+              </button>
+            </span>
           </div>
         )}
 
@@ -331,6 +410,81 @@ const styles = `
 
   .detail-value.url:hover {
     text-decoration: underline;
+  }
+
+  .port-value, .url-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .connection-url {
+    color: #0066cc;
+    text-decoration: none;
+    font-family: monospace;
+    background-color: #f5f5f5;
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+
+  .connection-url:hover {
+    text-decoration: underline;
+  }
+
+  .copy-button {
+    padding: 2px 6px;
+    font-size: 12px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    background-color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .copy-button:hover {
+    background-color: #f0f0f0;
+  }
+
+  .config-warning {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 4px;
+    margin-bottom: 12px;
+    font-size: 14px;
+  }
+
+  .warning-icon {
+    font-size: 16px;
+  }
+
+  .warning-text {
+    flex: 1;
+    color: #856404;
+  }
+
+  .refresh-button {
+    padding: 4px 12px;
+    font-size: 13px;
+    border: 1px solid #ffc107;
+    border-radius: 3px;
+    background-color: #ffc107;
+    color: #212529;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .refresh-button:hover:not(:disabled) {
+    background-color: #e0a800;
+    border-color: #e0a800;
+  }
+
+  .refresh-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 
   .error-row {
