@@ -1,0 +1,30 @@
+# Workspace Runtime Dependencies
+# Python 3.11+ with FastMCP for MCP server aggregation
+
+# FastMCP - Core aggregation framework
+fastmcp==0.1.0
+
+# SSE transport support
+sse-starlette==1.8.2
+uvicorn==0.30.1
+httpx==0.27.0
+
+# Async support
+aiofiles==23.2.1
+
+# JSON schema validation
+jsonschema==4.21.1
+
+# Logging and monitoring
+structlog==24.1.0
+
+# Health check server
+starlette==0.37.2
+
+# Environment configuration
+python-dotenv==1.0.1
+
+# Testing dependencies (for development)
+pytest==8.0.0
+pytest-asyncio==0.23.3
+pytest-cov==4.1.0
