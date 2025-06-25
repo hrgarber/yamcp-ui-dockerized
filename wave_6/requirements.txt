@@ -1,0 +1,22 @@
+# Wave 6 Requirements
+# Real MCP Server Composition with SmolAgents Testing
+
+# Core dependencies with specific versions for required features
+fastmcp>=2.7.0  # Minimum version for as_proxy() with config dict support (latest: 2.9.0)
+smolagents>=1.19.0  # Latest version with MCP integration via ToolCollection.from_mcp
+
+# MCP SDK (required by smolagents for MCP integration)
+mcp>=0.1.0  # Base MCP protocol support
+
+# For the AI model in smolagents
+huggingface-hub>=0.20.0  # Required for InferenceClientModel
+
+# Python version requirement
+# Requires Python 3.10+ for FastMCP
+
+# Optional but recommended for better async handling
+uvloop>=0.19.0
+
+# The MCP servers we're testing are installed via npx, so ensure Node.js is available
+# - perplexity-mcp (via npx)
+# - @modelcontextprotocol/server-sequential-thinking (via npx)
