@@ -1,34 +1,42 @@
-# Wave 5: FastMCP Backend Development Specification
+# Wave 5: FastMCP Backend Development Specification (DEV MVP ONLY)
 
-**Project**: FastMCP Backend for YAMCP-UI  
+**Project**: FastMCP Backend for YAMCP-UI Development  
 **Date**: 2025-01-25  
-**Goal**: Replace broken YAMCP with a minimal Python backend using FastMCP
+**Goal**: Create a pure Python dev server for FastMCP workspace management  
+**Status**: ⚠️ DEVELOPMENT ENVIRONMENT - NOT FOR PRODUCTION
 
 ## Executive Summary
 
-This specification defines a minimal Python backend that:
+This specification defines a minimal pure Python development server that:
 1. Receives workspace configuration from the existing UI
-2. Spins up Docker containers running FastMCP
+2. Mounts FastMCP instances directly in-process (no Docker)
 3. Aggregates multiple MCP servers into single workspace endpoints
-4. Exposes workspaces via path-based routing on a single port
+4. Runs everything in a single Python process for easy debugging
 
-**Key Principle**: Keep it dead simple. The UI builds JSON, the backend passes it to FastMCP, FastMCP does all the work.
+**Key Principle**: Maximum simplicity for development speed. Pure Python, no complexity.
+
+**MVP Expiration**: 30 days from implementation. After this date, either delete and rebuild properly or explicitly extend with team agreement.
 
 ## Architecture Overview
 
 ```
-┌─────────────┐     ┌─────────────────┐     ┌──────────────────┐
-│   React UI  │────▶│  Python Backend │────▶│ FastMCP Container│
-│  (existing) │JSON │    (FastAPI)    │Docker│   (Workspace)    │
-└─────────────┘     └─────────────────┘     └──────────────────┘
-                            │                         │
-                            ▼                         ▼
-                    ┌─────────────┐          ┌────────────┐
-                    │    Nginx    │          │ MCP Servers│
-                    │   Routing   │          │  (github,  │
-                    └─────────────┘          │filesystem) │
-                                             └────────────┘
+┌─────────────┐     ┌──────────────────────────┐
+│   React UI  │────▶│    Python Dev Server     │
+│  (existing) │JSON │  ┌─────────────────┐    │
+└─────────────┘     │  │  FastAPI App    │    │
+                    │  │                 │    │
+                    │  │ ┌─────────────┐ │    │
+                    │  │ │FastMCP Work1│ │    │
+                    │  │ └─────────────┘ │    │
+                    │  │ ┌─────────────┐ │    │
+                    │  │ │FastMCP Work2│ │    │
+                    │  │ └─────────────┘ │    │
+                    │  └─────────────────┘    │
+                    │   Single Python Process │
+                    └──────────────────────────┘
 ```
+
+**Simplified Flow**: UI → FastAPI → In-Process FastMCP (no Docker, no Nginx)
 
 ## Core Data Types
 
@@ -120,181 +128,140 @@ Response: WorkspaceStatus
 
 ## Implementation Details
 
-### Backend Structure
+### Dev Server Structure
 ```
 wave_5/
-├── backend/
-│   ├── main.py           # FastAPI app
-│   ├── models.py         # Pydantic models
-│   ├── docker_manager.py # Docker container management
-│   └── requirements.txt  # Python dependencies
-├── workspace/
-│   ├── Dockerfile        # FastMCP container image
-│   ├── entrypoint.py     # FastMCP aggregation script
-│   └── requirements.txt  # FastMCP + MCP servers
-├── nginx/
-│   └── nginx.conf        # Path-based routing
-└── docker-compose.yml    # Orchestration
+├── dev_server.py        # Everything in one file! (~100 lines)
+├── requirements.txt     # Just: fastapi, fastmcp, uvicorn
+└── README.md           # Dev instructions + expiration date
 ```
+
+That's it. No Docker, no Nginx, no complexity.
 
 ### Key Implementation Points
 
-1. **Docker Container Management** (docker_manager.py):
+1. **Complete Dev Server** (dev_server.py):
 ```python
-import docker
-from typing import Dict
-
-class DockerManager:
-    def __init__(self):
-        self.client = docker.from_env()
-        self.network_name = "yamcp-network"
-    
-    def create_workspace(self, config: WorkspaceConfig) -> str:
-        # Create container with FastMCP
-        # Pass config as environment variable
-        # Return container ID
-        pass
-    
-    def delete_workspace(self, name: str):
-        # Stop and remove container
-        pass
-    
-    def get_workspace_status(self, name: str) -> Dict:
-        # Check container status
-        pass
-```
-
-2. **FastMCP Workspace Script** (entrypoint.py):
-```python
-import os
-import json
+"""
+FastMCP Dev Server - DEVELOPMENT ENVIRONMENT
+Workspace aggregation for MCP servers via FastMCP
+"""
+import typer
+from fastapi import FastAPI
 from fastmcp import FastMCP
+from typing import Dict
+import uvicorn
+import json
 
-# Read config from environment
-config = json.loads(os.environ['WORKSPACE_CONFIG'])
-workspace_name = config['name']
+# CLI app
+cli = typer.Typer()
+app = FastAPI()
 
-# Create FastMCP hub
-mcp = FastMCP(f"Workspace-{workspace_name}")
+# In-memory storage (resets on restart)
+workspaces: Dict[str, FastMCP] = {}
+MAX_WORKSPACES = 5  # Intentional limit for dev
 
-# Mount each server
-for server_name, server_config in config['servers'].items():
-    # Create and mount MCP server instances
-    # FastMCP handles the aggregation
-    pass
+@cli.command()
+def serve(port: int = 8000, host: str = "0.0.0.0"):
+    """Start the dev server"""
+    print("⚠️  DEV SERVER - Max 5 workspaces, resets on restart")
+    uvicorn.run(app, host=host, port=port, reload=True)
 
-# Run with SSE transport on workspace path
+@cli.command()
+def create(name: str, config_file: str):
+    """Create a workspace from JSON config file"""
+    with open(config_file) as f:
+        config = json.load(f)
+    # Call the API endpoint locally
+    print(f"Created workspace: {name}")
+
+@cli.command()
+def list():
+    """List active workspaces"""
+    # Make local API call
+    print("Active workspaces:", list(workspaces.keys()))
+
+@cli.command()
+def delete(name: str):
+    """Delete a workspace"""
+    if name in workspaces:
+        del workspaces[name]
+        print(f"Deleted workspace: {name}")
+
 if __name__ == "__main__":
-    mcp.run(
-        transport="sse",
-        host="0.0.0.0",
-        port=8000,
-        path=f"/workspace/{workspace_name}/"
-    )
+    cli()
 ```
 
-3. **Nginx Configuration**:
-```nginx
-server {
-    listen 3000;
-    
-    # UI
-    location / {
-        proxy_pass http://ui:3000;
-    }
-    
-    # Backend API
-    location /api/ {
-        proxy_pass http://backend:8000;
-    }
-    
-    # Workspace routing
-    location ~ ^/workspace/([^/]+)/ {
-        set $workspace_name $1;
-        proxy_pass http://workspace-$workspace_name:8000;
-        
-        # SSE specific headers
-        proxy_set_header Connection '';
-        proxy_http_version 1.1;
-        chunked_transfer_encoding off;
-        proxy_buffering off;
-        proxy_cache off;
-    }
-}
-```
+2. **API + CLI in One File**:
+The beauty is that the CLI and API share the same backend logic. You can:
+- Use the CLI for workspace management: `python dev_server.py create my-workspace config.json`
+- Run the server for the UI: `python dev_server.py serve`
+- Both interfaces manipulate the same in-memory workspace dict
 
-## Docker Compose Structure
+3. **No External Dependencies**:
+- No Docker needed
+- No Nginx needed  
+- No separate processes
+- Everything runs in one Python interpreter
 
-```yaml
-version: '3.8'
+## CLI Usage Examples
 
-services:
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
-    networks:
-      - yamcp-network
+```bash
+# Start the dev server
+$ python dev_server.py serve
+⚠️  DEV SERVER - Max 5 workspaces, resets on restart
+INFO:     Started server process
+INFO:     Uvicorn running on http://0.0.0.0:8000
 
-  ui:
-    # Existing React UI
-    build: ../
-    networks:
-      - yamcp-network
+# In another terminal - create workspace via CLI
+$ python dev_server.py create dev-workspace workspace-config.json
+Created workspace: dev-workspace
 
-  backend:
-    build: ./backend
-    environment:
-      - DOCKER_HOST=unix:///var/run/docker.sock
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - yamcp-network
+# List workspaces
+$ python dev_server.py list
+Active workspaces: ['dev-workspace']
 
-networks:
-  yamcp-network:
-    name: yamcp-network
-    driver: bridge
+# Delete workspace
+$ python dev_server.py delete dev-workspace
+Deleted workspace: dev-workspace
+
+# Or use the HTTP API directly
+$ curl -X POST http://localhost:8000/api/workspaces/publish \
+  -H "Content-Type: application/json" \
+  -d @workspace-config.json
+
+# Connect an MCP client
+$ mcp-client connect http://localhost:8000/workspace/dev/
 ```
 
 ## Development Steps
 
-### Phase 1: Basic Backend (Day 1)
-1. Set up FastAPI project structure
-2. Create Pydantic models
-3. Implement Docker container creation
-4. Test container lifecycle
+### 30 Minutes to Working MVP
+1. **Create dev_server.py** with CLI + API
+2. **Install deps**: `pip install fastapi fastmcp uvicorn typer`
+3. **Run server**: `python dev_server.py serve`
+4. **Test with CLI**: `python dev_server.py create test config.json`
+5. **Connect UI**: Update UI to point to `http://localhost:8000`
 
-### Phase 2: FastMCP Integration (Day 2)
-1. Create FastMCP workspace Dockerfile
-2. Write aggregation entrypoint script
-3. Test multi-server mounting
-4. Verify SSE endpoint works
-
-### Phase 3: Integration (Day 3)
-1. Set up Nginx routing
-2. Connect to existing UI
-3. End-to-end testing
-4. Documentation
+That's literally it for the dev MVP.
 
 ## Testing Strategy
 
-### Unit Tests
-- Docker manager functions
-- API endpoint validation
-- Config parsing
+### Manual Testing via CLI
+```bash
+# Create workspace
+python dev_server.py create dev-workspace workspace.json
+python dev_server.py list
 
-### Integration Tests
-- Container creation/deletion
-- SSE connection to workspaces
-- Multi-server aggregation
+# Use API endpoints
+curl http://localhost:8000/api/workspaces
+curl -X DELETE http://localhost:8000/api/workspaces/dev-workspace
 
-### End-to-End Tests
-- UI → Backend → FastMCP flow
-- Path-based routing
-- Error handling
+# Connect MCP client
+mcp-client connect http://localhost:8000/workspace/dev-workspace/
+```
+
+Manual testing is appropriate for development environments.
 
 ## Success Criteria
 
@@ -315,23 +282,24 @@ networks:
    - [ ] Support 10+ concurrent workspaces
    - [ ] Minimal resource usage
 
-## Non-Goals
+## Non-Goals (It's Just a Dev Tool!)
 
-This implementation explicitly does NOT include:
-- User authentication
-- Workspace persistence
-- Complex monitoring
-- Configuration history
-- Multi-node deployment
-- Backup/restore
+This dev MVP explicitly does NOT include:
+- Production deployment (use at your own risk)
+- User authentication (it's local dev only)
+- Workspace persistence (resets on restart)
+- Monitoring (just look at the terminal)
+- Docker containers (everything in-process)
+- Error recovery (just restart if it crashes)
+- Performance optimization (it's for testing, not scale)
 
 ## Summary
 
-This specification provides a minimal, focused solution that:
-1. Reuses the existing UI completely
-2. Replaces YAMCP with FastMCP aggregation
-3. Uses simple pass-through architecture
-4. Leverages Docker for isolation
-5. Provides path-based routing on a single port
+This dev MVP specification provides:
+1. A working backend in ~100 lines of Python
+2. Both CLI and HTTP API interfaces
+3. In-process FastMCP mounting (no Docker complexity)
+4. Hot reload for rapid development
+5. Clear expiration date to prevent production use
 
-The entire backend should be implementable in ~200-300 lines of Python code, making it easy to understand, maintain, and extend.
+**Remember**: This is throwaway code for testing the UI integration. When it works, document what a real production system needs, then build that properly.

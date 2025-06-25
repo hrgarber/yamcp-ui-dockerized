@@ -1,105 +1,88 @@
-# Wave 5: FastMCP Backend Integration
+# Wave 5: FastMCP Dev Server (MVP)
+
+## ⚠️ DEVELOPMENT ENVIRONMENT - NOT FOR PRODUCTION ⚠️
+
+This is a minimal dev server that replaces YAMCP with FastMCP for development use.
 
 ## Overview
 
-Wave 5 replaces the broken YAMCP backend with a minimal Python FastMCP backend while keeping the existing UI completely unchanged. The UI was originally built for YAMCP, but we're repurposing it by implementing the same API endpoints with FastMCP.
+Wave 5 creates a pure Python dev server that:
+- Replaces the broken YAMCP backend
+- Keeps the existing UI completely unchanged
+- Runs everything in a single Python process (no Docker!)
+- Provides both CLI and HTTP interfaces
+
+## Quick Start (5 Minutes)
+
+```bash
+# 1. Install dependencies
+pip install fastapi fastmcp uvicorn typer
+
+# 2. Start the dev server
+python dev_server.py serve
+
+# 3. In another terminal, start the UI
+npm run dev
+
+# Done! UI should work with the new backend
+```
 
 ## Architecture
 
 ```mermaid
 graph TB
-    subgraph "Existing Components"
-        UI[React UI<br/>Port 5173]
-        UIServer[server.mjs<br/>Port 8765]
+    UI[React UI<br/>:5173] -->|"HTTP API"| DevServer[Python Dev Server<br/>:8000]
+    
+    subgraph "Single Python Process"
+        DevServer --> FastAPI[FastAPI App]
+        FastAPI --> W1[FastMCP<br/>Workspace 1]
+        FastAPI --> W2[FastMCP<br/>Workspace 2]
     end
     
-    subgraph "New FastMCP Backend"
-        FastAPI[FastAPI Backend<br/>Port 8000]
-        FastMCP1[FastMCP Workspace 1]
-        FastMCP2[FastMCP Workspace 2]
-        FastMCPN[FastMCP Workspace N]
-    end
+    CLI[CLI Commands] -->|"Same Process"| DevServer
     
-    UI -->|"Original connection"| UIServer
-    UIServer -->|"❌ Broken YAMCP calls"| YAMCP[YAMCP<br/>Not Working]
-    
-    UI -->|"New approach:<br/>Direct API calls"| FastAPI
-    FastAPI -->|"Manages"| FastMCP1
-    FastAPI -->|"Manages"| FastMCP2
-    FastAPI -->|"Manages"| FastMCPN
-    
-    Client[MCP Client] -->|"/workspace/dev/"| FastAPI
-    FastAPI -->|"Routes to"| FastMCP1
-    
-    style YAMCP fill:#ff6666
-    style UI fill:#66ff66
-    style FastAPI fill:#6666ff
+    style UI fill:#90EE90
+    style DevServer fill:#87CEEB
 ```
 
-## How It Works
+## What This Is
 
-### Current State (Broken)
-1. UI runs on port 5173 (development) or is served by server.mjs
-2. server.mjs (port 8765) tries to import YAMCP modules
-3. YAMCP is broken/incompatible, so nothing works
+A **working dev server** that replaces YAMCP with FastMCP. Features:
+- ✅ ~100 lines of Python
+- ✅ Both CLI and HTTP interfaces  
+- ✅ In-process FastMCP mounting (no Docker needed)
+- ✅ Hot reload for development
+- ✅ Real MCP server aggregation via FastMCP
+- ⚠️ No persistence (resets on restart - by design for dev)
+- ⚠️ No production features (auth, monitoring, etc.)
 
-### New Approach (Wave 5)
-1. Keep the UI exactly as is
-2. Create a FastAPI backend that implements the same endpoints
-3. UI can either:
-   - Connect directly to FastAPI (port 8000)
-   - Or we update server.mjs to proxy to FastAPI
+## CLI Usage
 
-## API Endpoints Required
+The dev server includes a CLI for testing without the UI:
 
-The UI expects these endpoints (from analyzing server.mjs):
+```bash
+# Start server
+python dev_server.py serve
 
-### Stats & Monitoring
-- `GET /api/stats` - Dashboard statistics
-- `GET /api/logs` - Log entries
-- `GET /api/log-files` - List log files
+# Create workspace
+python dev_server.py create my-workspace config.json
 
-### Server Management
-- `GET /api/servers` - List all MCP servers
-- `POST /api/servers` - Add new server
-- `PUT /api/servers/:id` - Update server
-- `DELETE /api/servers/:id` - Delete server
-- `POST /api/servers/:id/start` - Start server
-- `POST /api/servers/:id/stop` - Stop server
+# List workspaces  
+python dev_server.py list
 
-### Workspace Management
-- `GET /api/workspaces` - List workspaces
-- `POST /api/workspaces` - Create workspace
-- `PUT /api/workspaces/:id` - Update workspace
-- `DELETE /api/workspaces/:id` - Delete workspace
-- `POST /api/workspaces/:id/start` - Start workspace
-- `POST /api/workspaces/:id/stop` - Stop workspace
-
-### Configuration
-- `GET /api/config/providers` - Get providers config
-- `PUT /api/config/providers` - Update providers config
-- `GET /api/config/workspaces` - Get workspaces config
-- `PUT /api/config/workspaces` - Update workspaces config
-
-## Implementation Strategy
-
-### Option 1: Direct Integration (Recommended)
-```
-UI (localhost:5173) → FastAPI (localhost:8000) → FastMCP Workspaces
+# Delete workspace
+python dev_server.py delete my-workspace
 ```
 
-Update the UI to point to the FastAPI backend:
-```javascript
-// In UI code, change API base URL
-const API_BASE = 'http://localhost:8000';
-```
+## API Endpoints (Minimal for MVP)
 
-### Option 2: Proxy Through server.mjs
-```
-UI → server.mjs (8765) → FastAPI (8000) → FastMCP Workspaces
-```
-
-Modify server.mjs to proxy requests to FastAPI instead of using YAMCP.
+| Endpoint | Purpose | Implemented |
+|----------|---------|-------------|
+| `POST /api/workspaces/{name}` | Create workspace | ✅ |
+| `GET /api/workspaces` | List workspaces | ✅ |
+| `DELETE /api/workspaces/{name}` | Delete workspace | ✅ |
+| `GET /api/stats` | Dashboard stats | ✅ (basic) |
+| Everything else | Not needed for MVP | ❌ |
 
 ## Key Design Decisions
 
