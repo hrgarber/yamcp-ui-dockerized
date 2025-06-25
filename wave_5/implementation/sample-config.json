@@ -1,0 +1,13 @@
+{
+  "name": "sample-workspace",
+  "servers": {
+    "github": {
+      "command": "mcp-server-github",
+      "args": []
+    },
+    "filesystem": {
+      "command": "mcp-server-filesystem",
+      "args": ["--root", "/workspace"]
+    }
+  }
+}
