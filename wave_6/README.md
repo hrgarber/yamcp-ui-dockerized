@@ -9,6 +9,7 @@ Wave 6 demonstrates the integration of real MCP servers using FastMCP's composit
 - Python 3.10+ (required by FastMCP)
 - Node.js and npm (for npx to install MCP servers)
 - Perplexity API key (set in .env file)
+- Ollama installed with qwen2.5-coder:32b model (`ollama pull qwen2.5-coder:32b`)
 
 ## Installation
 

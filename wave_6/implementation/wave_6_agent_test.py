@@ -4,15 +4,16 @@ Wave 6: SmolAgents Test Client
 Tests the composed MCP workspace using smolagents, connecting via SSE
 Based on the concise pattern from nicknochnack/MCPin10
 """
-from smolagents import ToolCallingAgent, MCPClient, InferenceClientModel
+from smolagents import ToolCallingAgent, MCPClient, LiteLLMModel
 
 def main():
     """Test the composed workspace with smolagents"""
     print("Connecting to composed MCP workspace via SSE...")
     
-    # Model configuration
-    model = InferenceClientModel(
-        model_id="Qwen/Qwen2.5-Coder-32B-Instruct"
+    # Model configuration using LiteLLM with Ollama
+    model = LiteLLMModel(
+        model_id="ollama_chat/qwen2.5-coder:32b",
+        num_ctx=8192
     )
     
     # Server connection parameters for SSE
@@ -32,7 +33,7 @@ def main():
         
         # List available tools
         print("\nAvailable MCP tools:")
-        for tool in mcp_tools.tools:
+        for tool in mcp_tools:
             print(f"  - {tool.name}: {tool.description}")
         
         print("\n" + "="*60)

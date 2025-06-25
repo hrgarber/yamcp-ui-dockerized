@@ -35,13 +35,13 @@ WORKSPACE_CONFIG = {
 
 def main():
     """Create and run composed workspace server"""
-    print("Creating workspace with real MCP servers...")
+    print("Creating workspace with real MCP servers...", flush=True)
     
     # Check if API key is loaded
     if not os.getenv("PERPLEXITY_API_KEY"):
-        print("\n⚠️  Warning: PERPLEXITY_API_KEY not found in environment!")
-        print("   Please create a .env file in wave_6/ with your API key.")
-        print("   The perplexity server may not work without it.\n")
+        print("\n⚠️  Warning: PERPLEXITY_API_KEY not found in environment!", flush=True)
+        print("   Please create a .env file in wave_6/ with your API key.", flush=True)
+        print("   The perplexity server may not work without it.\n", flush=True)
     
     # FastMCP can create a proxy from a config dict!
     workspace = FastMCP.as_proxy(
@@ -49,14 +49,14 @@ def main():
         name="TestWorkspace"
     )
     
-    print("\n✓ Workspace created with mounted servers:")
-    print("  - perplexity (search capabilities)")
-    print("  - sequential-thinking (reasoning capabilities)")
-    print("\nStarting SSE server on http://localhost:8000/sse")
-    print("\nTools will be prefixed with server names:")
-    print("  - perplexity_*")
-    print("  - sequential_*")
-    print("\nPress Ctrl+C to stop the server")
+    print("\n✓ Workspace created with mounted servers:", flush=True)
+    print("  - perplexity (search capabilities)", flush=True)
+    print("  - sequential-thinking (reasoning capabilities)", flush=True)
+    print("\nStarting SSE server on http://localhost:8000/sse", flush=True)
+    print("\nTools will be prefixed with server names:", flush=True)
+    print("  - perplexity_*", flush=True)
+    print("  - sequential_*", flush=True)
+    print("\nPress Ctrl+C to stop the server", flush=True)
     
     # Run with SSE transport
     workspace.run(
